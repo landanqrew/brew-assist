@@ -13,6 +13,7 @@
 - [Data Models](#data-models)
 - [App Structure & Navigation](#app-structure--navigation)
 - [Milestones](#milestones)
+- [Infrastructure & Deployment](#infrastructure--deployment)
 
 ---
 
@@ -153,7 +154,7 @@ Users can build a gear profile and reference their equipment in check-ins and re
 | Auth           | Supabase Auth (email, Google, Apple)|
 | Database       | Supabase Postgres + Row Level Security |
 | File Storage   | Supabase Storage (photos)           |
-| State Mgmt     | TBD (Riverpod, Bloc, or Provider)  |
+| State Mgmt     | Riverpod (flutter_riverpod + riverpod_generator) |
 | Routing        | go_router                           |
 
 ---
@@ -452,9 +453,57 @@ Help users find great coffee.
 
 ---
 
+## Infrastructure & Deployment
+
+### Architecture
+
+No custom application server. The Flutter app communicates directly with Supabase's managed APIs:
+
+| Layer              | Hosted by          | Notes                                          |
+| ------------------ | ------------------ | ---------------------------------------------- |
+| Database (Postgres)| Supabase           | Managed instance, RLS for security              |
+| Auth               | Supabase Auth      | Email, Google, Apple sign-in                    |
+| File Storage       | Supabase Storage   | Photo uploads, avatars, equipment images        |
+| Realtime           | Supabase Realtime  | WebSocket subscriptions for live feed updates   |
+| Server-side logic  | Supabase Edge Functions | Serverless Deno functions if needed (e.g., aggregate rating recalculation, moderation hooks) |
+| Mobile app         | App Store / Google Play | Flutter compiles to native iOS + Android     |
+
+### Supabase Pricing Tiers
+
+| Tier       | Cost      | Database | Storage | MAUs  | Bandwidth | Use case                    |
+| ---------- | --------- | -------- | ------- | ----- | --------- | --------------------------- |
+| **Free**   | $0/mo     | 500MB    | 1GB     | 50K   | 5GB       | Development + early launch  |
+| **Pro**    | $25/mo    | 8GB      | 100GB   | 100K  | 250GB     | Post-launch growth          |
+| **Team**   | $599/mo   | 8GB+     | 100GB+  | 100K+ | 250GB+    | Scaling / compliance needs  |
+
+Overage on Pro: storage $0.021/GB, bandwidth $0.09/GB.
+
+### Other Costs
+
+| Item                       | Cost         |
+| -------------------------- | ------------ |
+| Apple Developer Program    | $99/year     |
+| Google Play Developer      | $25 one-time |
+| Custom domain (optional)   | ~$12/year    |
+
+### Cost Trajectory
+
+- **Development + beta**: Free tier ($0) — 500MB Postgres handles text-heavy data easily
+- **Launch to ~1K users**: Likely still free tier
+- **Growth past free limits**: Pro at $25/mo covers a substantial user base
+- **Primary cost driver**: Photo storage — mitigate by compressing/resizing images client-side before upload
+
+### Deployment Workflow
+
+- **Supabase**: Manage schema via migration files (`supabase/migrations/`). Use Supabase CLI for local dev, push migrations to hosted project for staging/production.
+- **iOS**: Build via `flutter build ios`, distribute through App Store Connect / TestFlight
+- **Android**: Build via `flutter build appbundle`, distribute through Google Play Console / internal testing tracks
+
+---
+
 ## Open Questions
 
-- **State management** — Riverpod, Bloc, or Provider? Need to decide before Phase 1.
+- **~~State management~~** — ~~Riverpod, Bloc, or Provider?~~ Decided: **Riverpod**.
 - **Coffee data seeding** — Do we seed an initial database of coffees/roasters, or purely user-generated?
 - **Offline support** — How important is offline-first? Affects architecture significantly.
 - **Moderation** — Any content moderation strategy for user-submitted data?
