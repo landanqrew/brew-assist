@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../core/supabase/image_upload.dart';
-import '../core/theme/app_colors.dart';
+import '../core/theme/app_colors.dart' show AppColors, kTransitionCurve, kTransitionDuration;
 import '../core/theme/app_text_styles.dart';
 
 /// A tappable tile that lets the user pick a photo from their gallery, uploads
@@ -60,7 +60,9 @@ class _PhotoPickerTileState extends State<PhotoPickerTile> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _isUploading ? null : _pick,
-      child: Container(
+      child: AnimatedContainer(
+        duration: kTransitionDuration,
+        curve: kTransitionCurve,
         height: widget.height,
         width: double.infinity,
         decoration: BoxDecoration(

@@ -54,6 +54,7 @@ abstract final class AppTheme {
       // ── Elevated Button ─────────────────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          animationDuration: kTransitionDuration,
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           disabledBackgroundColor: AppColors.disabled,

@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+/// Standard transition duration for interactive elements (chips, cards, etc.).
+const Duration kTransitionDuration = Duration(milliseconds: 200);
+
+/// Standard transition curve for interactive elements.
+const Curve kTransitionCurve = Curves.easeInOut;
+
 /// Centralized color tokens for the brew-assist design system.
 ///
 /// Designed for light mode with enough token separation to support dark mode
@@ -30,8 +36,8 @@ abstract final class AppColors {
 
   // ── Neutrals ────────────────────────────────────────────────────────────
 
-  /// Page background.
-  static const Color background = Color(0xFFFFFFFF);
+  /// Page background — slightly off-white so white cards pop.
+  static const Color background = Color(0xFFF7F7F7);
 
   /// Card / elevated surface background.
   static const Color surface = Color(0xFFF5F5F5);
@@ -85,5 +91,5 @@ abstract final class AppColors {
   static const Color scrim = Color(0x66000000);
 
   /// Shadow color for elevation.
-  static const Color shadow = Color(0x1A000000);
+  static const Color shadow = Color(0x33000000);
 }

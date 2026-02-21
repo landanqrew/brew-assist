@@ -407,18 +407,35 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             ],
 
             // ── 2. Coffee (only after roaster step done) ──────────────────
-            if (_roasterDone) ...[
-              _buildSectionHeader('Coffee'),
-              const SizedBox(height: 8),
-              if (!_coffeeDone) ...[
-                _buildCoffeeSearch(),
-              ] else ...[
-                _buildSelectedCoffeeCard(),
-              ],
-            ],
+            AnimatedSize(
+              duration: kTransitionDuration,
+              curve: kTransitionCurve,
+              alignment: Alignment.topCenter,
+              child: _roasterDone
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('Coffee'),
+                        const SizedBox(height: 8),
+                        if (!_coffeeDone)
+                          _buildCoffeeSearch()
+                        else
+                          _buildSelectedCoffeeCard(),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
 
             // ── Remaining fields (only after coffee selected) ─────────────
-            if (_coffeeDone) ...[
+            AnimatedSize(
+              duration: kTransitionDuration,
+              curve: kTransitionCurve,
+              alignment: Alignment.topCenter,
+              child: !_coffeeDone
+                  ? const SizedBox.shrink()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
               // ── 3. Venue Type ───────────────────────────────────────────
               _buildSectionHeader('Where are you?'),
               const SizedBox(height: 8),
@@ -482,7 +499,9 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
               // ── Submit ──────────────────────────────────────────────────
               const SizedBox(height: 32),
               _buildSubmitButton(isSubmitting),
-            ],
+                      ],
+                    ),
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -600,12 +619,21 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
   Widget _buildSelectedRoasterCard() {
     final name = _roasterSkipped ? 'Unknown roaster' : _selectedRoaster!.name;
-    return Container(
+    return AnimatedContainer(
+      duration: kTransitionDuration,
+      curve: kTransitionCurve,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -786,12 +814,21 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   }
 
   Widget _buildSelectedCoffeeCard() {
-    return Container(
+    return AnimatedContainer(
+      duration: kTransitionDuration,
+      curve: kTransitionCurve,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -867,12 +904,21 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
   Widget _buildVenueSearch() {
     if (_selectedVenue != null) {
-      return Container(
+      return AnimatedContainer(
+        duration: kTransitionDuration,
+        curve: kTransitionCurve,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
