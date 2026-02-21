@@ -20,6 +20,37 @@ final coffeeListProvider = FutureProvider<List<CoffeeWithRoaster>>((ref) async {
   return (data as List).map((json) => CoffeeWithRoaster.fromJson(json)).toList();
 });
 
+// ── Roaster Search ──────────────────────────────────────────────────────────
+
+/// Searches roasters by name using case-insensitive partial matching.
+final roasterSearchProvider =
+    FutureProvider.family<List<Roaster>, String>((ref, query) async {
+  if (query.trim().isEmpty) return [];
+
+  final data = await supabase
+      .from('roasters')
+      .select()
+      .ilike('name', '%${query.trim()}%')
+      .order('name', ascending: true)
+      .limit(20);
+
+  return (data as List).map((json) => Roaster.fromJson(json)).toList();
+});
+
+// ── Coffees by Roaster ──────────────────────────────────────────────────────
+
+/// Fetches coffees for a specific roaster, ordered by name.
+final coffeesByRoasterProvider =
+    FutureProvider.family<List<CoffeeWithRoaster>, String>((ref, roasterId) async {
+  final data = await supabase
+      .from('coffees')
+      .select('*, roasters(*)')
+      .eq('roaster_id', roasterId)
+      .order('name', ascending: true);
+
+  return (data as List).map((json) => CoffeeWithRoaster.fromJson(json)).toList();
+});
+
 // ── Coffee Search ───────────────────────────────────────────────────────────
 
 /// Searches coffees by name using case-insensitive partial matching.
@@ -108,10 +139,13 @@ Future<String> addCoffee({
   required String name,
   String? roasterId,
   String? roasterName,
+  String? roasterLogoUrl,
   String? origin,
   String? process,
   String? variety,
   String? description,
+  String? tastingNotes,
+  String? imageUrl,
 }) async {
   final userId = supabase.auth.currentUser?.id;
 
@@ -120,7 +154,11 @@ Future<String> addCoffee({
   if (finalRoasterId == null && roasterName != null && roasterName.trim().isNotEmpty) {
     final roasterData = await supabase
         .from('roasters')
-        .insert({'name': roasterName.trim()})
+        .insert({
+          'name': roasterName.trim(),
+          if (roasterLogoUrl != null && roasterLogoUrl.trim().isNotEmpty)
+            'logo_url': roasterLogoUrl.trim(),
+        })
         .select('id')
         .single();
     finalRoasterId = roasterData['id'] as String;
@@ -136,6 +174,10 @@ Future<String> addCoffee({
         if (variety != null && variety.trim().isNotEmpty) 'variety': variety.trim(),
         if (description != null && description.trim().isNotEmpty)
           'description': description.trim(),
+        if (tastingNotes != null && tastingNotes.trim().isNotEmpty)
+          'tasting_notes': tastingNotes.trim(),
+        if (imageUrl != null && imageUrl.trim().isNotEmpty)
+          'image_url': imageUrl.trim(),
         if (userId != null) 'created_by': userId,
       })
       .select('id')
@@ -178,6 +220,8 @@ class CheckInWithProfile {
     this.notes,
     this.brewMethod,
     this.servingStyle,
+    this.venueType,
+    this.specialtyDrink,
     this.photoUrl,
     required this.createdAt,
     this.username,
@@ -192,6 +236,8 @@ class CheckInWithProfile {
   final String? notes;
   final String? brewMethod;
   final String? servingStyle;
+  final String? venueType;
+  final String? specialtyDrink;
   final String? photoUrl;
   final DateTime createdAt;
 
@@ -211,6 +257,8 @@ class CheckInWithProfile {
       notes: json['notes'] as String?,
       brewMethod: json['brew_method'] as String?,
       servingStyle: json['serving_style'] as String?,
+      venueType: json['venue_type'] as String?,
+      specialtyDrink: json['specialty_drink'] as String?,
       photoUrl: json['photo_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       username: profileJson?['username'] as String?,

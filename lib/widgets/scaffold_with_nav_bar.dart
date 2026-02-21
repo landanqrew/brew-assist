@@ -45,7 +45,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.add_circle_outline, color: AppColors.primary, size: 32),
             selectedIcon: Icon(Icons.add_circle, color: AppColors.primary, size: 32),
-            label: '',
+            label: 'Check-In',
           ),
           const NavigationDestination(
             icon: Icon(Icons.menu_book_outlined),

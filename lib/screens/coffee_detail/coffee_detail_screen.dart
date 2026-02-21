@@ -239,7 +239,8 @@ class _CoffeeDetailBody extends ConsumerWidget {
   bool _hasInfoFields(coffee) {
     return (coffee.origin != null && coffee.origin!.isNotEmpty) ||
         (coffee.process != null && coffee.process!.isNotEmpty) ||
-        (coffee.variety != null && coffee.variety!.isNotEmpty);
+        (coffee.variety != null && coffee.variety!.isNotEmpty) ||
+        (coffee.tastingNotes != null && coffee.tastingNotes!.isNotEmpty);
   }
 }
 
@@ -371,6 +372,8 @@ class _InfoSection extends StatelessWidget {
             _InfoRow(label: 'Process', value: coffee.process!),
           if (coffee.variety != null && coffee.variety!.isNotEmpty)
             _InfoRow(label: 'Variety', value: coffee.variety!),
+          if (coffee.tastingNotes != null && coffee.tastingNotes!.isNotEmpty)
+            _InfoRow(label: 'Tasting Notes', value: coffee.tastingNotes!),
         ],
       ),
     );

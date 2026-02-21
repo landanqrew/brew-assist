@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/roaster.dart';
 import '../../providers/coffee_provider.dart';
+import '../../widgets/photo_picker_tile.dart';
 
 /// Common coffee processing methods.
 const _processOptions = [
@@ -35,12 +36,15 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
   final _originController = TextEditingController();
   final _varietyController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tastingNotesController = TextEditingController();
   final _newRoasterController = TextEditingController();
 
   String? _selectedProcess;
   Roaster? _selectedRoaster;
   bool _isNewRoaster = false;
   bool _isSubmitting = false;
+  String? _imageUrl;
+  String? _roasterLogoUrl;
 
   @override
   void dispose() {
@@ -48,6 +52,7 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
     _originController.dispose();
     _varietyController.dispose();
     _descriptionController.dispose();
+    _tastingNotesController.dispose();
     _newRoasterController.dispose();
     super.dispose();
   }
@@ -62,10 +67,13 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
         name: _nameController.text,
         roasterId: _isNewRoaster ? null : _selectedRoaster?.id,
         roasterName: _isNewRoaster ? _newRoasterController.text : null,
+        roasterLogoUrl: _isNewRoaster ? _roasterLogoUrl : null,
         origin: _originController.text,
         process: _selectedProcess,
         variety: _varietyController.text,
         description: _descriptionController.text,
+        tastingNotes: _tastingNotesController.text,
+        imageUrl: _imageUrl,
       );
 
       if (!mounted) return;
@@ -134,6 +142,7 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
                       _isNewRoaster = !_isNewRoaster;
                       if (!_isNewRoaster) {
                         _newRoasterController.clear();
+                        _roasterLogoUrl = null;
                       } else {
                         _selectedRoaster = null;
                       }
@@ -153,15 +162,23 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            if (_isNewRoaster)
+            if (_isNewRoaster) ...[
               TextFormField(
                 controller: _newRoasterController,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   hintText: 'New roaster name',
                 ),
-              )
-            else
+              ),
+              const SizedBox(height: 12),
+              PhotoPickerTile(
+                folder: 'roasters',
+                imageUrl: _roasterLogoUrl,
+                onUploaded: (url) => setState(() => _roasterLogoUrl = url),
+                label: 'Add Roaster Logo',
+                height: 120,
+              ),
+            ] else
               roastersAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => Text(
@@ -235,6 +252,20 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
             ),
             const SizedBox(height: 24),
 
+            // ── Tasting Notes ─────────────────────────────────────────
+            Text('Tasting Notes', style: AppTextStyles.labelLarge),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _tastingNotesController,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Blueberry, chocolate, jasmine',
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // ── Description ───────────────────────────────────────────
             Text('Description', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
@@ -246,6 +277,17 @@ class _AddCoffeeScreenState extends ConsumerState<AddCoffeeScreen> {
                 hintText: 'Optional tasting notes or details...',
                 alignLabelWithHint: true,
               ),
+            ),
+            const SizedBox(height: 24),
+
+            // ── Photo ─────────────────────────────────────────────────
+            Text('Photo', style: AppTextStyles.labelLarge),
+            const SizedBox(height: 8),
+            PhotoPickerTile(
+              folder: 'coffees',
+              imageUrl: _imageUrl,
+              onUploaded: (url) => setState(() => _imageUrl = url),
+              label: 'Add Coffee Photo',
             ),
             const SizedBox(height: 32),
 

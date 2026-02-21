@@ -42,8 +42,10 @@ class CheckInCard extends StatelessWidget {
             // ── Rating display ───────────────────────────────────────
             _RatingRow(rating: item.rating),
 
-            // ── Brew method + serving style chips ────────────────────
-            if (item.brewMethod != null || item.servingStyle != null) ...[
+            // ── Preparation + venue type chips ────────────────────────
+            if (item.brewMethod != null ||
+                item.specialtyDrink != null ||
+                item.venueType != null) ...[
               const SizedBox(height: 10),
               _MethodChips(item: item),
             ],
@@ -214,7 +216,7 @@ class _RatingRow extends StatelessWidget {
   }
 }
 
-// ── Method / Serving Style Chips ─────────────────────────────────────────────
+// ── Preparation / Venue Type Chips ───────────────────────────────────────────
 
 class _MethodChips extends StatelessWidget {
   const _MethodChips({required this.item});
@@ -229,10 +231,25 @@ class _MethodChips extends StatelessWidget {
       children: [
         if (item.brewMethod != null)
           _SmallChip(label: item.brewMethod!),
-        if (item.servingStyle != null)
-          _SmallChip(label: item.servingStyle!),
+        if (item.specialtyDrink != null && item.specialtyDrink!.isNotEmpty)
+          _SmallChip(label: item.specialtyDrink!),
+        if (item.venueType != null)
+          _SmallChip(label: _venueTypeLabel(item.venueType!)),
       ],
     );
+  }
+
+  String _venueTypeLabel(String type) {
+    switch (type) {
+      case 'home':
+        return 'Home';
+      case 'cafe':
+        return 'Cafe';
+      case 'other':
+        return 'Other';
+      default:
+        return type;
+    }
   }
 }
 

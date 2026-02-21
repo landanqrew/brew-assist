@@ -17,6 +17,8 @@ class FeedItem {
     this.flavorTags,
     this.brewMethod,
     this.servingStyle,
+    this.venueType,
+    this.specialtyDrink,
     this.photoUrl,
     required this.createdAt,
     // Profile fields
@@ -40,6 +42,8 @@ class FeedItem {
   final List<String>? flavorTags;
   final String? brewMethod;
   final String? servingStyle;
+  final String? venueType;
+  final String? specialtyDrink;
   final String? photoUrl;
   final DateTime createdAt;
 
@@ -86,6 +90,8 @@ class FeedItem {
       flavorTags: flavorTags,
       brewMethod: json['brew_method'] as String?,
       servingStyle: json['serving_style'] as String?,
+      venueType: json['venue_type'] as String?,
+      specialtyDrink: json['specialty_drink'] as String?,
       photoUrl: json['photo_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       // Profile
@@ -134,6 +140,8 @@ class UserCheckIn {
     this.flavorTags,
     this.brewMethod,
     this.servingStyle,
+    this.venueType,
+    this.specialtyDrink,
     required this.createdAt,
     this.coffeeName,
     this.roasterName,
@@ -146,6 +154,8 @@ class UserCheckIn {
   final List<String>? flavorTags;
   final String? brewMethod;
   final String? servingStyle;
+  final String? venueType;
+  final String? specialtyDrink;
   final DateTime createdAt;
   final String? coffeeName;
   final String? roasterName;
@@ -169,6 +179,8 @@ class UserCheckIn {
       flavorTags: flavorTags,
       brewMethod: json['brew_method'] as String?,
       servingStyle: json['serving_style'] as String?,
+      venueType: json['venue_type'] as String?,
+      specialtyDrink: json['specialty_drink'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       coffeeName: coffeeJson?['name'] as String?,
       roasterName: roasterJson?['name'] as String?,

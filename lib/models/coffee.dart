@@ -12,6 +12,8 @@ class Coffee {
     this.process,
     this.variety,
     this.description,
+    this.tastingNotes,
+    this.imageUrl,
     this.avgRating,
     this.checkInCount,
     this.createdBy,
@@ -36,6 +38,12 @@ class Coffee {
 
   final String? description;
 
+  @JsonKey(name: 'tasting_notes')
+  final String? tastingNotes;
+
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+
   @JsonKey(name: 'avg_rating')
   final double? avgRating;
 
@@ -58,6 +66,8 @@ class Coffee {
     String? process,
     String? variety,
     String? description,
+    String? tastingNotes,
+    String? imageUrl,
     double? avgRating,
     int? checkInCount,
     String? createdBy,
@@ -71,6 +81,8 @@ class Coffee {
       process: process ?? this.process,
       variety: variety ?? this.variety,
       description: description ?? this.description,
+      tastingNotes: tastingNotes ?? this.tastingNotes,
+      imageUrl: imageUrl ?? this.imageUrl,
       avgRating: avgRating ?? this.avgRating,
       checkInCount: checkInCount ?? this.checkInCount,
       createdBy: createdBy ?? this.createdBy,

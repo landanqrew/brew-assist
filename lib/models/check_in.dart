@@ -14,6 +14,8 @@ class CheckIn {
     this.brewMethod,
     this.servingStyle,
     this.photoUrl,
+    this.venueType,
+    this.specialtyDrink,
     this.venueId,
     this.grinderId,
     this.grinderSetting,
@@ -47,6 +49,12 @@ class CheckIn {
   @JsonKey(name: 'photo_url')
   final String? photoUrl;
 
+  @JsonKey(name: 'venue_type')
+  final String? venueType;
+
+  @JsonKey(name: 'specialty_drink')
+  final String? specialtyDrink;
+
   @JsonKey(name: 'venue_id')
   final String? venueId;
 
@@ -71,6 +79,8 @@ class CheckIn {
     String? brewMethod,
     String? servingStyle,
     String? photoUrl,
+    String? venueType,
+    String? specialtyDrink,
     String? venueId,
     String? grinderId,
     String? grinderSetting,
@@ -86,6 +96,8 @@ class CheckIn {
       brewMethod: brewMethod ?? this.brewMethod,
       servingStyle: servingStyle ?? this.servingStyle,
       photoUrl: photoUrl ?? this.photoUrl,
+      venueType: venueType ?? this.venueType,
+      specialtyDrink: specialtyDrink ?? this.specialtyDrink,
       venueId: venueId ?? this.venueId,
       grinderId: grinderId ?? this.grinderId,
       grinderSetting: grinderSetting ?? this.grinderSetting,

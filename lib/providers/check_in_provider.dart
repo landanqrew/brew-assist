@@ -47,8 +47,11 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
     required double rating,
     String? notes,
     List<String>? flavorTags,
-    String? brewMethod,
-    String? servingStyle,
+    String? preparation,
+    String? specialtyDrink,
+    String? venueType,
+    String? venueId,
+    String? photoUrl,
   }) async {
     state = const CheckInSubmissionState(
       status: CheckInSubmissionStatus.submitting,
@@ -61,6 +64,7 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
       }
 
       // Insert the check-in row.
+      // `preparation` maps to the existing `brew_method` column.
       await supabase.from('check_ins').insert({
         'user_id': userId,
         'coffee_id': coffeeId,
@@ -68,8 +72,12 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
         if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
         if (flavorTags != null && flavorTags.isNotEmpty)
           'flavor_tags': flavorTags,
-        if (brewMethod != null) 'brew_method': brewMethod,
-        if (servingStyle != null) 'serving_style': servingStyle,
+        if (preparation != null) 'brew_method': preparation,
+        if (specialtyDrink != null && specialtyDrink.trim().isNotEmpty)
+          'specialty_drink': specialtyDrink.trim(),
+        if (venueType != null) 'venue_type': venueType,
+        if (venueId != null) 'venue_id': venueId,
+        if (photoUrl != null) 'photo_url': photoUrl,
       });
 
       // Update the coffee's avg_rating and check_in_count client-side.
