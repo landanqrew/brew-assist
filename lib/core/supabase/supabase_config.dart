@@ -1,14 +1,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 /// Initializes the Supabase client.
 ///
-/// Call this once in `main()` before `runApp()`.
-/// Replace the placeholder values with your actual Supabase project
-/// credentials (or load them from environment / build config).
+/// Reads credentials from compile-time environment variables.
+/// Run with: `flutter run --dart-define-from-file=.env.json`
 Future<void> initSupabase() async {
+  assert(
+    _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty,
+    'Supabase credentials missing. '
+    'Run with: flutter run --dart-define-from-file=.env.json',
+  );
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_ANON_KEY',
+    url: _supabaseUrl,
+    anonKey: _supabaseAnonKey,
   );
 }
 

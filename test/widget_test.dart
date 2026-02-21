@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:brew_assist/main.dart';
+import 'package:brew_assist/core/theme/app_theme.dart';
+import 'package:brew_assist/screens/auth/login_screen.dart';
 
 void main() {
-  testWidgets('App renders bottom navigation', (WidgetTester tester) async {
+  testWidgets('Login screen renders correctly', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(child: BrewAssistApp()),
+      const ProviderScope(
+        child: MaterialApp(
+          home: LoginScreen(),
+        ),
+      ),
     );
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text('Feed'), findsOneWidget);
-    expect(find.text('Search'), findsOneWidget);
-    expect(find.text('Recipes'), findsOneWidget);
-    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('brew-assist'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.byType(TextFormField), findsAtLeast(2)); // email + password
+  });
+
+  testWidgets('Theme uses forest green primary', (WidgetTester tester) async {
+    final theme = AppTheme.light;
+
+    expect(theme.useMaterial3, isTrue);
+    expect(theme.colorScheme.primary, const Color(0xFF5B7F5E));
   });
 }

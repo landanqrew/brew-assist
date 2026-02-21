@@ -12,11 +12,13 @@ Future<void> main() async {
 }
 
 /// Root widget for the brew-assist application.
-class BrewAssistApp extends StatelessWidget {
+class BrewAssistApp extends ConsumerWidget {
   const BrewAssistApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'brew-assist',
       theme: AppTheme.light,
