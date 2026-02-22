@@ -9,6 +9,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feed_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/social_provider.dart';
 
 /// The current user's profile screen.
 ///
@@ -22,7 +23,15 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final profile = authState.profile;
+    final userId = authState.user?.id;
     final userCheckIns = ref.watch(userCheckInsProvider);
+
+    final followingCount = userId != null
+        ? ref.watch(followingCountProvider(userId)).valueOrNull ?? 0
+        : 0;
+    final followerCount = userId != null
+        ? ref.watch(followerCountProvider(userId)).valueOrNull ?? 0
+        : 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -96,6 +105,14 @@ class ProfileScreen extends ConsumerWidget {
                           .whenOrNull(data: (c) => c) ?? 0,
                       error: (_, __) => 0,
                     ),
+                    followingCount: followingCount,
+                    followerCount: followerCount,
+                    onFollowingTap: userId != null
+                        ? () => context.push('/user/$userId/following')
+                        : null,
+                    onFollowersTap: userId != null
+                        ? () => context.push('/user/$userId/followers')
+                        : null,
                   ),
                   const SizedBox(height: 24),
 
@@ -139,9 +156,19 @@ class _ProfileAvatar extends StatelessWidget {
 // ── Stats Row ───────────────────────────────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.checkInCount});
+  const _StatsRow({
+    required this.checkInCount,
+    required this.followingCount,
+    required this.followerCount,
+    this.onFollowingTap,
+    this.onFollowersTap,
+  });
 
   final int checkInCount;
+  final int followingCount;
+  final int followerCount;
+  final VoidCallback? onFollowingTap;
+  final VoidCallback? onFollowersTap;
 
   @override
   Widget build(BuildContext context) {
@@ -152,9 +179,17 @@ class _StatsRow extends StatelessWidget {
           children: [
             _StatColumn(count: checkInCount, label: 'Check-ins'),
             _divider(),
-            const _StatColumn(count: 0, label: 'Following'),
+            _StatColumn(
+              count: followingCount,
+              label: 'Following',
+              onTap: onFollowingTap,
+            ),
             _divider(),
-            const _StatColumn(count: 0, label: 'Followers'),
+            _StatColumn(
+              count: followerCount,
+              label: 'Followers',
+              onTap: onFollowersTap,
+            ),
           ],
         ),
       ),
@@ -171,27 +206,36 @@ class _StatsRow extends StatelessWidget {
 }
 
 class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.count, required this.label});
+  const _StatColumn({
+    required this.count,
+    required this.label,
+    this.onTap,
+  });
 
   final int count;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$count',
-            style: AppTextStyles.statNumber,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTextStyles.statLabel,
-          ),
-        ],
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$count',
+              style: AppTextStyles.statNumber,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTextStyles.statLabel,
+            ),
+          ],
+        ),
       ),
     );
   }

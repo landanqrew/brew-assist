@@ -2,6 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/supabase/supabase_config.dart';
 import '../providers/auth_provider.dart';
+import '../providers/social_provider.dart';
+
+// ── Feed Mode ────────────────────────────────────────────────────────────────
+
+enum FeedMode { following, everyone }
+
+final feedModeProvider = StateProvider<FeedMode>((ref) => FeedMode.everyone);
 
 // ── FeedItem Model ───────────────────────────────────────────────────────────
 
@@ -110,14 +117,26 @@ class FeedItem {
 
 // ── Feed Provider ────────────────────────────────────────────────────────────
 
-/// Fetches the most recent check-ins globally (for MVP, no follow filtering).
+/// Fetches the most recent check-ins, optionally filtered by follow list.
 ///
-/// Joins profiles and coffees (with roasters) so that the feed UI has all the
-/// data it needs in a single query.
+/// When [feedModeProvider] is `following` and the user follows at least one
+/// person, only check-ins from followed users + the current user are shown.
+/// Otherwise falls back to the global feed.
 final feedProvider = FutureProvider<List<FeedItem>>((ref) async {
-  final data = await supabase
+  final mode = ref.watch(feedModeProvider);
+  final followingIds = ref.watch(followingIdsProvider).valueOrNull ?? [];
+  final me = supabase.auth.currentUser?.id;
+
+  var query = supabase
       .from('check_ins')
-      .select('*, profiles(*), coffees(*, roasters(*))')
+      .select('*, profiles(*), coffees(*, roasters(*))');
+
+  if (mode == FeedMode.following && followingIds.isNotEmpty && me != null) {
+    final ids = [...followingIds, me];
+    query = query.inFilter('user_id', ids);
+  }
+
+  final data = await query
       .order('created_at', ascending: false)
       .limit(50);
 

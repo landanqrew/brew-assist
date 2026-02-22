@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 import '../providers/feed_provider.dart';
+import '../providers/social_provider.dart';
 
 /// A Vivino-inspired card widget for displaying a check-in in the feed.
 ///
@@ -69,9 +71,9 @@ class CheckInCard extends StatelessWidget {
               ),
             ],
 
-            // ── Bottom row: like placeholder ─────────────────────────
+            // ── Bottom row: like + comment ───────────────────────────
             const SizedBox(height: 12),
-            _BottomRow(),
+            _BottomRow(checkInId: item.id),
           ],
         ),
       ),
@@ -93,46 +95,53 @@ class _HeaderRow extends StatelessWidget {
 
     return Row(
       children: [
-        // Avatar
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: AppColors.surface,
-          backgroundImage: item.avatarUrl != null && item.avatarUrl!.isNotEmpty
-              ? NetworkImage(item.avatarUrl!)
-              : null,
-          child: item.avatarUrl == null || item.avatarUrl!.isEmpty
-              ? const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                )
-              : null,
-        ),
-        const SizedBox(width: 10),
-
-        // Name + username
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        // Avatar + name — tappable to user profile
+        GestureDetector(
+          onTap: () => context.push('/user/${item.userId}'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                displayName,
-                style: AppTextStyles.titleSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.surface,
+                backgroundImage:
+                    item.avatarUrl != null && item.avatarUrl!.isNotEmpty
+                        ? NetworkImage(item.avatarUrl!)
+                        : null,
+                child: item.avatarUrl == null || item.avatarUrl!.isEmpty
+                    ? const Icon(
+                        Icons.person,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      )
+                    : null,
               ),
-              if (username.isNotEmpty)
-                Text(
-                  '@$username',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: AppTextStyles.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  if (username.isNotEmpty)
+                    Text(
+                      '@$username',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
             ],
           ),
         ),
+
+        const Spacer(),
 
         // Time ago
         Text(
@@ -295,23 +304,71 @@ class _SmallChip extends StatelessWidget {
   }
 }
 
-// ── Bottom Row (Like Placeholder) ────────────────────────────────────────────
+// ── Bottom Row (Like + Comment) ──────────────────────────────────────────────
 
-class _BottomRow extends StatelessWidget {
+class _BottomRow extends ConsumerWidget {
+  const _BottomRow({required this.checkInId});
+
+  final String checkInId;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final likeKey = (targetType: 'check_in', targetId: checkInId);
+    final isLiked = ref.watch(isLikedByMeProvider(likeKey)).valueOrNull ?? false;
+    final likeCount = ref.watch(likeCountProvider(likeKey)).valueOrNull ?? 0;
+
+    final commentKey = (targetType: 'check_in', targetId: checkInId);
+    final commentCount =
+        ref.watch(commentCountProvider(commentKey)).valueOrNull ?? 0;
+
     return Row(
       children: [
-        Icon(
-          Icons.favorite_border_rounded,
-          size: 20,
-          color: AppColors.textSecondary,
+        // Like button
+        GestureDetector(
+          onTap: () => ref
+              .read(likeNotifierProvider.notifier)
+              .toggleLike('check_in', checkInId),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isLiked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                size: 20,
+                color: isLiked ? AppColors.error : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$likeCount',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: isLiked ? AppColors.error : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(width: 4),
-        Text(
-          '0',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+        const SizedBox(width: 16),
+
+        // Comment button
+        GestureDetector(
+          onTap: () => context.push('/check-in/$checkInId/comments'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$commentCount',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       ],
