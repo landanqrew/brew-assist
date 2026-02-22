@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
 
 /// Placeholder screen for browsing and searching brew recipes.
 ///
@@ -27,6 +30,11 @@ class RecipesScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/recipe/new'),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: AppColors.white),
       ),
     );
   }

@@ -7,22 +7,16 @@ part of 'recipe.dart';
 // **************************************************************************
 
 RecipeStep _$RecipeStepFromJson(Map<String, dynamic> json) => RecipeStep(
-  type: json['type'] as String,
-  label: json['label'] as String,
-  durationSec: (json['duration_sec'] as num?)?.toInt(),
-  pressureBar: (json['pressure_bar'] as num?)?.toDouble(),
+  stepTimeSec: (json['step_time'] as num).toInt(),
+  description: json['description'] as String,
   waterMl: (json['water_ml'] as num?)?.toDouble(),
-  pressureKg: (json['pressure_kg'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$RecipeStepToJson(RecipeStep instance) =>
     <String, dynamic>{
-      'type': instance.type,
-      'label': instance.label,
-      'duration_sec': instance.durationSec,
-      'pressure_bar': instance.pressureBar,
+      'step_time': instance.stepTimeSec,
+      'description': instance.description,
       'water_ml': instance.waterMl,
-      'pressure_kg': instance.pressureKg,
     };
 
 Recipe _$RecipeFromJson(Map<String, dynamic> json) => Recipe(
@@ -50,6 +44,12 @@ Recipe _$RecipeFromJson(Map<String, dynamic> json) => Recipe(
   avgRating: (json['avg_rating'] as num?)?.toDouble(),
   saveCount: (json['save_count'] as num?)?.toInt(),
   createdAt: DateTime.parse(json['created_at'] as String),
+  brewerId: json['brewer_id'] as String?,
+  distributionMethod: json['distribution_method'] as String?,
+  tampPressureKg: (json['tamp_pressure_kg'] as num?)?.toDouble(),
+  preInfusionSec: (json['pre_infusion_sec'] as num?)?.toInt(),
+  maxPressureBar: (json['max_pressure_bar'] as num?)?.toDouble(),
+  milkNotes: json['milk_notes'] as String?,
 );
 
 Map<String, dynamic> _$RecipeToJson(Recipe instance) => <String, dynamic>{
@@ -75,4 +75,10 @@ Map<String, dynamic> _$RecipeToJson(Recipe instance) => <String, dynamic>{
   'avg_rating': instance.avgRating,
   'save_count': instance.saveCount,
   'created_at': instance.createdAt.toIso8601String(),
+  'brewer_id': instance.brewerId,
+  'distribution_method': instance.distributionMethod,
+  'tamp_pressure_kg': instance.tampPressureKg,
+  'pre_infusion_sec': instance.preInfusionSec,
+  'max_pressure_bar': instance.maxPressureBar,
+  'milk_notes': instance.milkNotes,
 };

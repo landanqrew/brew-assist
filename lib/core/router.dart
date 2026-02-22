@@ -8,9 +8,12 @@ import '../screens/auth/signup_screen.dart';
 import '../screens/check_in/check_in_screen.dart';
 import '../screens/coffee/add_coffee_screen.dart';
 import '../screens/coffee_detail/coffee_detail_screen.dart';
+import '../screens/comments/comments_screen.dart';
 import '../screens/feed/feed_screen.dart';
+import '../screens/follow_list/follow_list_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/recipe/recipe_form_screen.dart';
 import '../screens/recipe_detail/recipe_detail_screen.dart';
 import '../screens/recipes/recipes_screen.dart';
 import '../screens/roaster_detail/roaster_detail_screen.dart';
@@ -164,6 +167,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/recipe/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RecipeFormScreen(),
+      ),
+      GoRoute(
+        path: '/recipe/:id/edit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => RecipeFormScreen(
+          recipeId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
         path: '/recipe/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => RecipeDetailScreen(
@@ -175,6 +190,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => UserProfileScreen(
           userId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/user/:id/followers',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => FollowListScreen(
+          userId: state.pathParameters['id']!,
+          mode: FollowListMode.followers,
+        ),
+      ),
+      GoRoute(
+        path: '/user/:id/following',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => FollowListScreen(
+          userId: state.pathParameters['id']!,
+          mode: FollowListMode.following,
+        ),
+      ),
+      GoRoute(
+        path: '/check-in/:id/comments',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CommentsScreen(
+          checkInId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
