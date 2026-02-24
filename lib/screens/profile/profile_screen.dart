@@ -9,18 +9,28 @@ import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feed_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/recipe_provider.dart';
 import '../../providers/social_provider.dart';
+import '../../widgets/profile_tab_bar.dart';
+import '../../widgets/recipe_card.dart';
 
 /// The current user's profile screen.
 ///
 /// Displays the user's avatar, display name, username, stats row
-/// (check-ins / following / followers), and recent check-in history.
-/// Follows the Vivino-style design from PLAN.md.
-class ProfileScreen extends ConsumerWidget {
+/// (check-ins / following / followers), and tabbed content area
+/// with Check-ins, Recipes, and Saved tabs.
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  int _selectedTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final profile = authState.profile;
     final userId = authState.user?.id;
@@ -116,8 +126,19 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Recent Check-ins section ───────────────────────────
-                  _RecentCheckInsSection(checkInsAsync: userCheckIns),
+                  // ── Tab bar ────────────────────────────────────────────
+                  ProfileTabBar(
+                    labels: const ['Check-ins', 'Recipes', 'Saved'],
+                    selectedIndex: _selectedTab,
+                    onSelected: (i) => setState(() => _selectedTab = i),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Tab content ────────────────────────────────────────
+                  if (_selectedTab == 0)
+                    _CheckInsSection(checkInsAsync: userCheckIns),
+                  if (_selectedTab == 1) const _RecipesSection(),
+                  if (_selectedTab == 2) const _SavedRecipesSection(),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -241,70 +262,188 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-// ── Recent Check-ins Section ────────────────────────────────────────────────
+// ── Check-ins Section ───────────────────────────────────────────────────────
 
-class _RecentCheckInsSection extends StatelessWidget {
-  const _RecentCheckInsSection({required this.checkInsAsync});
+class _CheckInsSection extends StatelessWidget {
+  const _CheckInsSection({required this.checkInsAsync});
 
   final AsyncValue<List<UserCheckIn>> checkInsAsync;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your recent check-ins',
-          style: AppTextStyles.titleMedium,
+    return checkInsAsync.when(
+      data: (checkIns) {
+        if (checkIns.isEmpty) {
+          return _EmptyState(
+            icon: Icons.coffee_outlined,
+            title: 'No check-ins yet',
+            subtitle: 'Start by checking in your first coffee!',
+            actionLabel: 'Check In',
+            onAction: () => context.go('/check-in'),
+          );
+        }
+        return Column(
+          children: checkIns
+              .map((checkIn) => _CompactCheckInItem(checkIn: checkIn))
+              .toList(),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
-        const SizedBox(height: 16),
-        checkInsAsync.when(
-          data: (checkIns) {
-            if (checkIns.isEmpty) {
-              return _EmptyCheckIns();
-            }
-            return Column(
-              children: checkIns
-                  .map((checkIn) => _CompactCheckInItem(checkIn: checkIn))
-                  .toList(),
-            );
-          },
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          ),
-          error: (error, _) => Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    size: 32,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Could not load check-ins',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+      ),
+      error: (error, _) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: AppColors.error,
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                'Could not load check-ins',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-// ── Empty Check-ins Card ────────────────────────────────────────────────────
+// ── Recipes Section ─────────────────────────────────────────────────────────
 
-class _EmptyCheckIns extends StatelessWidget {
+class _RecipesSection extends ConsumerWidget {
+  const _RecipesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipesAsync = ref.watch(userRecipesFeedProvider);
+
+    return recipesAsync.when(
+      data: (recipes) {
+        if (recipes.isEmpty) {
+          return _EmptyState(
+            icon: Icons.menu_book_outlined,
+            title: 'No recipes yet',
+            subtitle: 'Share your first brew recipe!',
+            actionLabel: 'Create Recipe',
+            onAction: () => context.push('/recipe/new'),
+          );
+        }
+        return Column(
+          children: recipes.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: RecipeCard(item: item),
+          )).toList(),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (_, __) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 32, color: AppColors.error),
+              const SizedBox(height: 8),
+              Text(
+                'Could not load recipes',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Saved Recipes Section ───────────────────────────────────────────────────
+
+class _SavedRecipesSection extends ConsumerWidget {
+  const _SavedRecipesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final savedAsync = ref.watch(savedRecipesProvider);
+
+    return savedAsync.when(
+      data: (recipes) {
+        if (recipes.isEmpty) {
+          return _EmptyState(
+            icon: Icons.bookmark_border_rounded,
+            title: 'No saved recipes',
+            subtitle: 'Bookmark recipes to find them here later.',
+          );
+        }
+        return Column(
+          children: recipes.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: RecipeCard(item: item),
+          )).toList(),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (_, __) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 32, color: AppColors.error),
+              const SizedBox(height: 8),
+              Text(
+                'Could not load saved recipes',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty State ─────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -312,30 +451,25 @@ class _EmptyCheckIns extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(
-              Icons.coffee_outlined,
-              size: 48,
-              color: AppColors.textSecondary,
-            ),
+            Icon(icon, size: 48, color: AppColors.textSecondary),
             const SizedBox(height: 12),
-            Text(
-              'No check-ins yet',
-              style: AppTextStyles.titleSmall,
-            ),
+            Text(title, style: AppTextStyles.titleSmall),
             const SizedBox(height: 8),
             Text(
-              'Start by checking in your first coffee!',
+              subtitle,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => context.go('/check-in'),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Check In'),
-            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

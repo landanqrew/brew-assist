@@ -86,6 +86,44 @@ final recipeSearchProvider =
   return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
 });
 
+/// Fetches the current user's recipes as RecipeFeedItem (with profile join).
+final userRecipesFeedProvider = FutureProvider<List<RecipeFeedItem>>((ref) async {
+  final userId = ref.read(authProvider).user?.id;
+  if (userId == null) return [];
+  final data = await supabase
+      .from('recipes')
+      .select('*, profiles(*)')
+      .eq('user_id', userId)
+      .order('created_at', ascending: false);
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
+
+/// Fetches another user's recipes as RecipeFeedItem.
+final userRecipesFeedByIdProvider =
+    FutureProvider.family<List<RecipeFeedItem>, String>((ref, userId) async {
+  final data = await supabase
+      .from('recipes')
+      .select('*, profiles(*)')
+      .eq('user_id', userId)
+      .order('created_at', ascending: false);
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
+
+/// Fetches the current user's bookmarked/saved recipes.
+final savedRecipesProvider = FutureProvider<List<RecipeFeedItem>>((ref) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return [];
+  final data = await supabase
+      .from('saved_recipes')
+      .select('recipes(*, profiles(*))')
+      .eq('user_id', me)
+      .order('created_at', ascending: false);
+  return (data as List).map((row) {
+    final recipeJson = row['recipes'] as Map<String, dynamic>;
+    return RecipeFeedItem.fromJson(recipeJson);
+  }).toList();
+});
+
 // ── Save / Bookmark Providers ────────────────────────────────────────────────
 
 /// Whether the current user has saved the given recipe.
@@ -134,6 +172,7 @@ class SaveNotifier extends StateNotifier<AsyncValue<void>> {
       }
       _ref.invalidate(isSavedByMeProvider(recipeId));
       _ref.invalidate(recipeDetailProvider(recipeId));
+      _ref.invalidate(savedRecipesProvider);
     } catch (_) {
       // Silently fail — UI stays in the previous state.
     }

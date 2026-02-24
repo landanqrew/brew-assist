@@ -8,30 +8,42 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feed_provider.dart';
+import '../../providers/recipe_provider.dart';
 import '../../providers/social_provider.dart';
+import '../../widgets/profile_tab_bar.dart';
+import '../../widgets/recipe_card.dart';
 
 /// Full profile screen for viewing another user (or yourself via deep link).
 ///
-/// Shows avatar, name, bio, follow button, stats, and recent check-ins.
-class UserProfileScreen extends ConsumerWidget {
+/// Shows avatar, name, bio, follow button, stats, and tabbed content
+/// with Check-ins and Recipes tabs.
+class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key, required this.userId});
 
   final String userId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileProvider(userId));
-    final isOwnProfile = ref.watch(authProvider).user?.id == userId;
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
+  int _selectedTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(userProfileProvider(widget.userId));
+    final isOwnProfile = ref.watch(authProvider).user?.id == widget.userId;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: profileAsync.when(
         data: (profile) {
-          final checkInsAsync = ref.watch(userCheckInsByIdProvider(userId));
+          final checkInsAsync =
+              ref.watch(userCheckInsByIdProvider(widget.userId));
           final followingCount =
-              ref.watch(followingCountProvider(userId)).valueOrNull ?? 0;
+              ref.watch(followingCountProvider(widget.userId)).valueOrNull ?? 0;
           final followerCount =
-              ref.watch(followerCountProvider(userId)).valueOrNull ?? 0;
+              ref.watch(followerCountProvider(widget.userId)).valueOrNull ?? 0;
           final checkInCount = checkInsAsync.when(
             data: (items) => items.length,
             loading: () => 0,
@@ -90,7 +102,7 @@ class UserProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 // Follow / Unfollow button
-                if (!isOwnProfile) _FollowButton(userId: userId),
+                if (!isOwnProfile) _FollowButton(userId: widget.userId),
                 if (!isOwnProfile) const SizedBox(height: 24),
 
                 // Stats row
@@ -99,14 +111,25 @@ class UserProfileScreen extends ConsumerWidget {
                   followingCount: followingCount,
                   followerCount: followerCount,
                   onFollowingTap: () =>
-                      context.push('/user/$userId/following'),
+                      context.push('/user/${widget.userId}/following'),
                   onFollowersTap: () =>
-                      context.push('/user/$userId/followers'),
+                      context.push('/user/${widget.userId}/followers'),
                 ),
                 const SizedBox(height: 24),
 
-                // Recent check-ins
-                _RecentCheckInsSection(checkInsAsync: checkInsAsync),
+                // ── Tab bar ──────────────────────────────────────────
+                ProfileTabBar(
+                  labels: const ['Check-ins', 'Recipes'],
+                  selectedIndex: _selectedTab,
+                  onSelected: (i) => setState(() => _selectedTab = i),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Tab content ──────────────────────────────────────
+                if (_selectedTab == 0)
+                  _CheckInsSection(checkInsAsync: checkInsAsync),
+                if (_selectedTab == 1)
+                  _RecipesSection(userId: widget.userId),
                 const SizedBox(height: 32),
               ],
             ),
@@ -127,7 +150,7 @@ class UserProfileScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: () =>
-                    ref.invalidate(userProfileProvider(userId)),
+                    ref.invalidate(userProfileProvider(widget.userId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -244,62 +267,111 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-// ── Recent Check-ins Section ─────────────────────────────────────────────────
+// ── Check-ins Section ────────────────────────────────────────────────────────
 
-class _RecentCheckInsSection extends StatelessWidget {
-  const _RecentCheckInsSection({required this.checkInsAsync});
+class _CheckInsSection extends StatelessWidget {
+  const _CheckInsSection({required this.checkInsAsync});
 
   final AsyncValue<List<UserCheckIn>> checkInsAsync;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Recent check-ins', style: AppTextStyles.titleMedium),
-        const SizedBox(height: 16),
-        checkInsAsync.when(
-          data: (checkIns) {
-            if (checkIns.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Center(
-                    child: Text(
-                      'No check-ins yet',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
-                    ),
-                  ),
-                ),
-              );
-            }
-            return Column(
-              children: checkIns
-                  .map((c) => _CompactCheckInItem(checkIn: c))
-                  .toList(),
-            );
-          },
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          ),
-          error: (_, __) => Card(
+    return checkInsAsync.when(
+      data: (checkIns) {
+        if (checkIns.isEmpty) {
+          return Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'Could not load check-ins',
+                  'No check-ins yet',
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.textSecondary),
                 ),
               ),
             ),
+          );
+        }
+        return Column(
+          children: checkIns
+              .map((c) => _CompactCheckInItem(checkIn: c))
+              .toList(),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (_, __) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'Could not load check-ins',
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
+            ),
           ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+// ── Recipes Section ──────────────────────────────────────────────────────────
+
+class _RecipesSection extends ConsumerWidget {
+  const _RecipesSection({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipesAsync = ref.watch(userRecipesFeedByIdProvider(userId));
+
+    return recipesAsync.when(
+      data: (recipes) {
+        if (recipes.isEmpty) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'No recipes yet',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: recipes.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: RecipeCard(item: item),
+          )).toList(),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (_, __) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'Could not load recipes',
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
