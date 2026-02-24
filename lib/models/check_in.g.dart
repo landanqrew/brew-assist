@@ -23,6 +23,7 @@ CheckIn _$CheckInFromJson(Map<String, dynamic> json) => CheckIn(
   venueId: json['venue_id'] as String?,
   grinderId: json['grinder_id'] as String?,
   grinderSetting: json['grinder_setting'] as String?,
+  recipeId: json['recipe_id'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
 );
 
@@ -41,5 +42,6 @@ Map<String, dynamic> _$CheckInToJson(CheckIn instance) => <String, dynamic>{
   'venue_id': instance.venueId,
   'grinder_id': instance.grinderId,
   'grinder_setting': instance.grinderSetting,
+  'recipe_id': instance.recipeId,
   'created_at': instance.createdAt.toIso8601String(),
 };

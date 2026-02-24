@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/supabase/supabase_config.dart';
 import '../providers/auth_provider.dart';
+import '../providers/recipe_provider.dart';
 
 // ── Check-in Submission State ────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
     String? venueType,
     String? venueId,
     String? photoUrl,
+    String? recipeId,
   }) async {
     state = const CheckInSubmissionState(
       status: CheckInSubmissionStatus.submitting,
@@ -78,10 +80,16 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
         if (venueType != null) 'venue_type': venueType,
         if (venueId != null) 'venue_id': venueId,
         if (photoUrl != null) 'photo_url': photoUrl,
+        if (recipeId != null) 'recipe_id': recipeId,
       });
 
       // Update the coffee's avg_rating and check_in_count client-side.
       await _updateCoffeeAggregates(coffeeId, rating);
+
+      // If a recipe is linked, also upsert a rating for that recipe.
+      if (recipeId != null) {
+        await _rateLinkedRecipe(userId, recipeId, rating);
+      }
 
       state = const CheckInSubmissionState(
         status: CheckInSubmissionStatus.success,
@@ -122,6 +130,30 @@ class CheckInNotifier extends StateNotifier<CheckInSubmissionState> {
     } catch (_) {
       // Non-critical — the check-in was already saved. Aggregate updates
       // failing shouldn't block the user experience.
+    }
+  }
+
+  /// Upserts a recipe rating from the check-in's star rating and refreshes
+  /// the recipe's aggregate avg_rating.
+  Future<void> _rateLinkedRecipe(
+    String userId,
+    String recipeId,
+    double rating,
+  ) async {
+    try {
+      await supabase.from('recipe_ratings').upsert(
+        {
+          'user_id': userId,
+          'recipe_id': recipeId,
+          'rating': rating,
+        },
+        onConflict: 'user_id,recipe_id',
+      );
+      await supabase.rpc('update_recipe_avg_rating', params: {'rid': recipeId});
+      _ref.invalidate(myRecipeRatingProvider(recipeId));
+      _ref.invalidate(recipeDetailProvider(recipeId));
+    } catch (_) {
+      // Non-critical — the check-in was already saved.
     }
   }
 

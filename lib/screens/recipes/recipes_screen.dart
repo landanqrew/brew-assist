@@ -10,7 +10,8 @@ import '../../models/recipe.dart';
 import '../../providers/recipe_provider.dart';
 import '../../widgets/recipe_card.dart';
 
-/// Browse screen for community recipes with search and brew method filtering.
+/// Browse screen for community recipes with search, brew method filtering,
+/// sort options, and a trending section.
 class RecipesScreen extends ConsumerStatefulWidget {
   const RecipesScreen({super.key});
 
@@ -20,6 +21,7 @@ class RecipesScreen extends ConsumerStatefulWidget {
 
 class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   String? _selectedBrewMethod;
+  String _sortBy = 'newest';
   String _searchQuery = '';
   final _searchController = TextEditingController();
   Timer? _debounce;
@@ -40,11 +42,14 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
 
   bool get _isSearching => _searchQuery.isNotEmpty;
 
+  RecipeListParam get _listParam =>
+      (brewMethod: _selectedBrewMethod, sortBy: _sortBy);
+
   @override
   Widget build(BuildContext context) {
     final recipesAsync = _isSearching
         ? ref.watch(recipeSearchProvider(_searchQuery))
-        : ref.watch(recipeListProvider(_selectedBrewMethod));
+        : ref.watch(recipeListProvider(_listParam));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recipes')),
@@ -107,6 +112,39 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                 ],
               ),
             ),
+
+            // Sort chips
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _SortChip(
+                    label: 'Newest',
+                    icon: Icons.schedule,
+                    value: 'newest',
+                    selected: _sortBy,
+                    onSelected: (v) => setState(() => _sortBy = v),
+                  ),
+                  _SortChip(
+                    label: 'Top Rated',
+                    icon: Icons.star_rounded,
+                    value: 'topRated',
+                    selected: _sortBy,
+                    onSelected: (v) => setState(() => _sortBy = v),
+                  ),
+                  _SortChip(
+                    label: 'Most Saved',
+                    icon: Icons.bookmark_rounded,
+                    value: 'mostSaved',
+                    selected: _sortBy,
+                    onSelected: (v) => setState(() => _sortBy = v),
+                  ),
+                ],
+              ),
+            ),
           ],
 
           const SizedBox(height: 8),
@@ -124,16 +162,22 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                     if (_isSearching) {
                       ref.invalidate(recipeSearchProvider(_searchQuery));
                     } else {
-                      ref.invalidate(recipeListProvider(_selectedBrewMethod));
+                      ref.invalidate(recipeListProvider(_listParam));
                     }
                   },
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    itemCount: items.length,
+                    itemCount:
+                        items.length + (_isSearching ? 0 : 1), // +1 trending
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      return RecipeCard(item: items[index]);
+                      // Trending section as first item
+                      if (!_isSearching && index == 0) {
+                        return const _TrendingSection();
+                      }
+                      final itemIndex = _isSearching ? index : index - 1;
+                      return RecipeCard(item: items[itemIndex]);
                     },
                   ),
                 );
@@ -159,8 +203,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                             ref.invalidate(
                                 recipeSearchProvider(_searchQuery));
                           } else {
-                            ref.invalidate(
-                                recipeListProvider(_selectedBrewMethod));
+                            ref.invalidate(recipeListProvider(_listParam));
                           }
                         },
                         icon: const Icon(Icons.refresh, size: 18),
@@ -178,6 +221,155 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
         onPressed: () => context.push('/recipe/new'),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.white),
+      ),
+    );
+  }
+}
+
+// ── Sort Chip ────────────────────────────────────────────────────────────────
+
+class _SortChip extends StatelessWidget {
+  const _SortChip({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final IconData icon;
+  final String value;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        avatar: Icon(icon, size: 16),
+        label: Text(label),
+        selected: selected == value,
+        onSelected: (_) => onSelected(value),
+      ),
+    );
+  }
+}
+
+// ── Trending Section ─────────────────────────────────────────────────────────
+
+class _TrendingSection extends ConsumerWidget {
+  const _TrendingSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trendingAsync = ref.watch(trendingRecipesProvider);
+
+    return trendingAsync.when(
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'TRENDING',
+              style: AppTextStyles.kicker.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 140,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) =>
+                    _TrendingCard(item: items[index]),
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ── Trending Card ────────────────────────────────────────────────────────────
+
+class _TrendingCard extends StatelessWidget {
+  const _TrendingCard({required this.item});
+
+  final RecipeFeedItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final recipe = item.recipe;
+    return GestureDetector(
+      onTap: () => context.push('/recipe/${recipe.id}'),
+      child: Container(
+        width: 160,
+        padding: const EdgeInsets.all(12),
+        decoration: AppColors.cardDecoration,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Rating badge
+            if (recipe.avgRating != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        size: 14, color: AppColors.primary),
+                    const SizedBox(width: 3),
+                    Text(
+                      recipe.avgRating!.toStringAsFixed(1),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Spacer(),
+            Text(
+              recipe.title,
+              style: AppTextStyles.titleSmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              recipe.brewMethod,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (item.authorDisplayName != null ||
+                item.authorUsername != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                item.authorDisplayName ?? item.authorUsername ?? '',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

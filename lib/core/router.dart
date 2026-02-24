@@ -14,6 +14,7 @@ import '../screens/follow_list/follow_list_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/recipe/recipe_form_screen.dart';
+import '../screens/recipe_detail/brew_timer_screen.dart';
 import '../screens/recipe_detail/recipe_detail_screen.dart';
 import '../screens/recipes/recipes_screen.dart';
 import '../screens/roaster_detail/roaster_detail_screen.dart';
@@ -110,8 +111,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) {
                   final coffeeId =
                       state.uri.queryParameters['coffeeId'];
+                  final recipeId =
+                      state.uri.queryParameters['recipeId'];
                   return NoTransitionPage(
-                    child: CheckInScreen(coffeeId: coffeeId),
+                    child: CheckInScreen(
+                      coffeeId: coffeeId,
+                      recipeId: recipeId,
+                    ),
                   );
                 },
               ),
@@ -183,6 +189,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => RecipeFormScreen(
           forkedFromId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/recipe/:id/brew',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => BrewTimerScreen(
+          recipeId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(

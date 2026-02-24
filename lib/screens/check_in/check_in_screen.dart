@@ -52,9 +52,10 @@ const _flavorTagOptions = [
 /// Accepts an optional [coffeeId] to pre-select a coffee (e.g. from the
 /// coffee detail screen's "Check in this coffee" button).
 class CheckInScreen extends ConsumerStatefulWidget {
-  const CheckInScreen({super.key, this.coffeeId});
+  const CheckInScreen({super.key, this.coffeeId, this.recipeId});
 
   final String? coffeeId;
+  final String? recipeId;
 
   @override
   ConsumerState<CheckInScreen> createState() => _CheckInScreenState();
@@ -360,6 +361,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             venueType: _venueType,
             venueId: _selectedVenue?.id,
             photoUrl: _photoUrl,
+            recipeId: widget.recipeId,
           );
 
       if (mounted) {

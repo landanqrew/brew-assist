@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/equipment_provider.dart';
 import '../../providers/recipe_provider.dart';
 import '../../providers/social_provider.dart';
+import '../../widgets/gradient_button.dart';
 
 /// Full detail screen for a single recipe.
 class RecipeDetailScreen extends ConsumerWidget {
@@ -104,7 +105,7 @@ class _RecipeDetailBody extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 100),
+        padding: const EdgeInsets.only(bottom: 140),
         children: [
           // ── Header ──────────────────────────────────────────────
           Padding(
@@ -302,39 +303,53 @@ class _RecipeDetailBody extends ConsumerWidget {
           16,
           12 + MediaQuery.of(context).viewPadding.bottom,
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Save/Bookmark toggle
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => ref
-                    .read(saveNotifierProvider.notifier)
-                    .toggleSave(recipeId),
-                icon: Icon(
-                  isSaved
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
-                ),
-                label: Text(isSaved ? 'Saved' : 'Save'),
+            // Start Brew button (only when recipe has steps)
+            if (recipe.steps != null && recipe.steps!.isNotEmpty) ...[
+              GradientButton(
+                onPressed: () =>
+                    context.push('/recipe/$recipeId/brew'),
+                child: const Text('Start Brew'),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Edit (owner) or Fork (non-owner)
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (isOwner) {
-                    context.push('/recipe/$recipeId/edit');
-                  } else {
-                    context.push('/recipe/$recipeId/fork');
-                  }
-                },
-                icon: Icon(
-                  isOwner ? Icons.edit_outlined : Icons.fork_right,
-                  size: 18,
+              const SizedBox(height: 10),
+            ],
+            Row(
+              children: [
+                // Save/Bookmark toggle
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => ref
+                        .read(saveNotifierProvider.notifier)
+                        .toggleSave(recipeId),
+                    icon: Icon(
+                      isSaved
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_border_rounded,
+                    ),
+                    label: Text(isSaved ? 'Saved' : 'Save'),
+                  ),
                 ),
-                label: Text(isOwner ? 'Edit' : 'Fork'),
-              ),
+                const SizedBox(width: 12),
+                // Edit (owner) or Fork (non-owner)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (isOwner) {
+                        context.push('/recipe/$recipeId/edit');
+                      } else {
+                        context.push('/recipe/$recipeId/fork');
+                      }
+                    },
+                    icon: Icon(
+                      isOwner ? Icons.edit_outlined : Icons.fork_right,
+                      size: 18,
+                    ),
+                    label: Text(isOwner ? 'Edit' : 'Fork'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

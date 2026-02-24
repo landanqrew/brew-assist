@@ -19,6 +19,7 @@ class CheckIn {
     this.venueId,
     this.grinderId,
     this.grinderSetting,
+    this.recipeId,
     required this.createdAt,
   });
 
@@ -64,6 +65,9 @@ class CheckIn {
   @JsonKey(name: 'grinder_setting')
   final String? grinderSetting;
 
+  @JsonKey(name: 'recipe_id')
+  final String? recipeId;
+
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
@@ -84,6 +88,7 @@ class CheckIn {
     String? venueId,
     String? grinderId,
     String? grinderSetting,
+    String? recipeId,
     DateTime? createdAt,
   }) {
     return CheckIn(
@@ -101,6 +106,7 @@ class CheckIn {
       venueId: venueId ?? this.venueId,
       grinderId: grinderId ?? this.grinderId,
       grinderSetting: grinderSetting ?? this.grinderSetting,
+      recipeId: recipeId ?? this.recipeId,
       createdAt: createdAt ?? this.createdAt,
     );
   }

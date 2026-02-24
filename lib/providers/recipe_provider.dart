@@ -56,18 +56,52 @@ final userRecipesProvider = FutureProvider<List<Recipe>>((ref) async {
   return (data as List).map((json) => Recipe.fromJson(json)).toList();
 });
 
-/// Fetches recipes filtered by brew method (null = all), with author info.
-final recipeListProvider =
-    FutureProvider.family<List<RecipeFeedItem>, String?>((ref, brewMethod) async {
-  var request = supabase.from('recipes').select('*, profiles(*)');
+/// Parameter record for [recipeListProvider]. Uses a Dart record so Riverpod
+/// gets correct `==`/`hashCode` for caching.
+typedef RecipeListParam = ({String? brewMethod, String sortBy});
 
-  if (brewMethod != null && brewMethod.isNotEmpty) {
-    request = request.eq('brew_method', brewMethod);
+/// Fetches recipes filtered by brew method and sorted by the given mode.
+///
+/// Sort modes: `newest`, `topRated`, `mostSaved`.
+final recipeListProvider =
+    FutureProvider.family<List<RecipeFeedItem>, RecipeListParam>((ref, param) async {
+  var request = supabase.from('recipes').select('*, profiles!recipes_user_id_fkey(*)');
+
+  if (param.brewMethod != null && param.brewMethod!.isNotEmpty) {
+    request = request.eq('brew_method', param.brewMethod!);
+  }
+
+  // Map sort mode to Supabase .order() — called once at the end of the chain.
+  final String orderCol;
+  switch (param.sortBy) {
+    case 'topRated':
+      orderCol = 'avg_rating';
+    case 'mostSaved':
+      orderCol = 'save_count';
+    default:
+      orderCol = 'created_at';
   }
 
   final data = await request
-      .order('created_at', ascending: false)
+      .order(orderCol, ascending: false)
       .limit(50);
+
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
+
+/// Top 10 recipes by avg_rating from the last 30 days.
+final trendingRecipesProvider =
+    FutureProvider<List<RecipeFeedItem>>((ref) async {
+  final thirtyDaysAgo =
+      DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
+
+  final data = await supabase
+      .from('recipes')
+      .select('*, profiles!recipes_user_id_fkey(*)')
+      .not('avg_rating', 'is', null)
+      .gte('created_at', thirtyDaysAgo)
+      .order('avg_rating', ascending: false)
+      .limit(10);
 
   return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
 });
@@ -79,7 +113,7 @@ final recipeSearchProvider =
   final q = '%$query%';
   final data = await supabase
       .from('recipes')
-      .select('*, profiles(*)')
+      .select('*, profiles!recipes_user_id_fkey(*)')
       .or('title.ilike.$q,description.ilike.$q')
       .order('created_at', ascending: false)
       .limit(30);
@@ -92,7 +126,7 @@ final userRecipesFeedProvider = FutureProvider<List<RecipeFeedItem>>((ref) async
   if (userId == null) return [];
   final data = await supabase
       .from('recipes')
-      .select('*, profiles(*)')
+      .select('*, profiles!recipes_user_id_fkey(*)')
       .eq('user_id', userId)
       .order('created_at', ascending: false);
   return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
@@ -103,7 +137,7 @@ final userRecipesFeedByIdProvider =
     FutureProvider.family<List<RecipeFeedItem>, String>((ref, userId) async {
   final data = await supabase
       .from('recipes')
-      .select('*, profiles(*)')
+      .select('*, profiles!recipes_user_id_fkey(*)')
       .eq('user_id', userId)
       .order('created_at', ascending: false);
   return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
@@ -115,7 +149,7 @@ final savedRecipesProvider = FutureProvider<List<RecipeFeedItem>>((ref) async {
   if (me == null) return [];
   final data = await supabase
       .from('saved_recipes')
-      .select('recipes(*, profiles(*))')
+      .select('recipes(*, profiles!recipes_user_id_fkey(*))')
       .eq('user_id', me)
       .order('created_at', ascending: false);
   return (data as List).map((row) {
@@ -366,7 +400,7 @@ final recipesByCoffeeProvider =
     FutureProvider.family<List<RecipeFeedItem>, String>((ref, coffeeId) async {
   final data = await supabase
       .from('recipes')
-      .select('*, profiles(*)')
+      .select('*, profiles!recipes_user_id_fkey(*)')
       .eq('coffee_id', coffeeId)
       .order('created_at', ascending: false)
       .limit(10);
