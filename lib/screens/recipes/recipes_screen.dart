@@ -1,40 +1,233 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../models/recipe.dart';
+import '../../providers/recipe_provider.dart';
+import '../../widgets/recipe_card.dart';
 
-/// Placeholder screen for browsing and searching brew recipes.
-///
-/// Will include tabs for browsing all recipes and viewing saved/bookmarked ones.
-class RecipesScreen extends StatelessWidget {
+/// Browse screen for community recipes with search and brew method filtering.
+class RecipesScreen extends ConsumerStatefulWidget {
   const RecipesScreen({super.key});
 
   @override
+  ConsumerState<RecipesScreen> createState() => _RecipesScreenState();
+}
+
+class _RecipesScreenState extends ConsumerState<RecipesScreen> {
+  String? _selectedBrewMethod;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _searchQuery = value.trim());
+    });
+  }
+
+  bool get _isSearching => _searchQuery.isNotEmpty;
+
+  @override
   Widget build(BuildContext context) {
+    final recipesAsync = _isSearching
+        ? ref.watch(recipeSearchProvider(_searchQuery))
+        : ref.watch(recipeListProvider(_selectedBrewMethod));
+
     return Scaffold(
       appBar: AppBar(title: const Text('Recipes')),
-      body: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.menu_book_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Recipes',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search recipes...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+              ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Brew guides and recipes from the community.',
-              style: TextStyle(color: Colors.grey),
+          ),
+
+          // Brew method filter chips (hidden during search)
+          if (!_isSearching) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('All'),
+                      selected: _selectedBrewMethod == null,
+                      onSelected: (_) {
+                        setState(() => _selectedBrewMethod = null);
+                      },
+                    ),
+                  ),
+                  ...brewMethods.map((method) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(method),
+                        selected: _selectedBrewMethod == method,
+                        onSelected: (selected) {
+                          setState(() => _selectedBrewMethod =
+                              selected ? method : null);
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ],
-        ),
+
+          const SizedBox(height: 8),
+
+          // Recipe list
+          Expanded(
+            child: recipesAsync.when(
+              data: (items) {
+                if (items.isEmpty) {
+                  return _EmptyState(isSearch: _isSearching);
+                }
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    if (_isSearching) {
+                      ref.invalidate(recipeSearchProvider(_searchQuery));
+                    } else {
+                      ref.invalidate(recipeListProvider(_selectedBrewMethod));
+                    }
+                  },
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      return RecipeCard(item: items[index]);
+                    },
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+              error: (error, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          size: 48, color: AppColors.error),
+                      const SizedBox(height: 16),
+                      Text('Something went wrong',
+                          style: AppTextStyles.titleMedium),
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          if (_isSearching) {
+                            ref.invalidate(
+                                recipeSearchProvider(_searchQuery));
+                          } else {
+                            ref.invalidate(
+                                recipeListProvider(_selectedBrewMethod));
+                          }
+                        },
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/recipe/new'),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.white),
+      ),
+    );
+  }
+}
+
+// ── Empty State ─────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.isSearch});
+
+  final bool isSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.menu_book_outlined,
+              size: 64,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isSearch ? 'No recipes found' : 'No recipes yet',
+              style: AppTextStyles.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isSearch
+                  ? 'Try a different search term.'
+                  : 'Be the first to share a brew recipe!',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (!isSearch) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/recipe/new'),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Create a Recipe'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

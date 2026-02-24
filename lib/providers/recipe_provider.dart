@@ -4,6 +4,33 @@ import '../core/supabase/supabase_config.dart';
 import '../models/recipe.dart';
 import '../providers/auth_provider.dart';
 
+// ── Composite Model ──────────────────────────────────────────────────────────
+
+/// A recipe with its author's profile info, parsed from a Supabase join.
+class RecipeFeedItem {
+  const RecipeFeedItem({
+    required this.recipe,
+    this.authorUsername,
+    this.authorDisplayName,
+    this.authorAvatarUrl,
+  });
+
+  final Recipe recipe;
+  final String? authorUsername;
+  final String? authorDisplayName;
+  final String? authorAvatarUrl;
+
+  factory RecipeFeedItem.fromJson(Map<String, dynamic> json) {
+    final p = json['profiles'] as Map<String, dynamic>?;
+    return RecipeFeedItem(
+      recipe: Recipe.fromJson(json),
+      authorUsername: p?['username'] as String?,
+      authorDisplayName: p?['display_name'] as String?,
+      authorAvatarUrl: p?['avatar_url'] as String?,
+    );
+  }
+}
+
 // ── Read Providers ───────────────────────────────────────────────────────────
 
 /// Fetches a single recipe by ID.
@@ -29,10 +56,10 @@ final userRecipesProvider = FutureProvider<List<Recipe>>((ref) async {
   return (data as List).map((json) => Recipe.fromJson(json)).toList();
 });
 
-/// Fetches recipes filtered by brew method (null = all).
+/// Fetches recipes filtered by brew method (null = all), with author info.
 final recipeListProvider =
-    FutureProvider.family<List<Recipe>, String?>((ref, brewMethod) async {
-  var request = supabase.from('recipes').select();
+    FutureProvider.family<List<RecipeFeedItem>, String?>((ref, brewMethod) async {
+  var request = supabase.from('recipes').select('*, profiles(*)');
 
   if (brewMethod != null && brewMethod.isNotEmpty) {
     request = request.eq('brew_method', brewMethod);
@@ -42,7 +69,80 @@ final recipeListProvider =
       .order('created_at', ascending: false)
       .limit(50);
 
-  return (data as List).map((json) => Recipe.fromJson(json)).toList();
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
+
+/// Searches recipes by title or description, with author info.
+final recipeSearchProvider =
+    FutureProvider.family<List<RecipeFeedItem>, String>((ref, query) async {
+  if (query.isEmpty) return [];
+  final q = '%$query%';
+  final data = await supabase
+      .from('recipes')
+      .select('*, profiles(*)')
+      .or('title.ilike.$q,description.ilike.$q')
+      .order('created_at', ascending: false)
+      .limit(30);
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
+
+// ── Save / Bookmark Providers ────────────────────────────────────────────────
+
+/// Whether the current user has saved the given recipe.
+final isSavedByMeProvider =
+    FutureProvider.family<bool, String>((ref, recipeId) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return false;
+
+  final data = await supabase
+      .from('saved_recipes')
+      .select('id')
+      .eq('user_id', me)
+      .eq('recipe_id', recipeId)
+      .maybeSingle();
+
+  return data != null;
+});
+
+/// Toggles save/bookmark on a recipe.
+class SaveNotifier extends StateNotifier<AsyncValue<void>> {
+  SaveNotifier(this._ref) : super(const AsyncData(null));
+
+  final Ref _ref;
+
+  Future<void> toggleSave(String recipeId) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return;
+
+    final currentlySaved =
+        _ref.read(isSavedByMeProvider(recipeId)).valueOrNull ?? false;
+
+    try {
+      if (currentlySaved) {
+        await supabase
+            .from('saved_recipes')
+            .delete()
+            .eq('user_id', me)
+            .eq('recipe_id', recipeId);
+        await supabase.rpc('decrement_save_count', params: {'rid': recipeId});
+      } else {
+        await supabase.from('saved_recipes').insert({
+          'user_id': me,
+          'recipe_id': recipeId,
+        });
+        await supabase.rpc('increment_save_count', params: {'rid': recipeId});
+      }
+      _ref.invalidate(isSavedByMeProvider(recipeId));
+      _ref.invalidate(recipeDetailProvider(recipeId));
+    } catch (_) {
+      // Silently fail — UI stays in the previous state.
+    }
+  }
+}
+
+final saveNotifierProvider =
+    StateNotifierProvider<SaveNotifier, AsyncValue<void>>((ref) {
+  return SaveNotifier(ref);
 });
 
 // ── Submission State ─────────────────────────────────────────────────────────

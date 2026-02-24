@@ -8,11 +8,16 @@ import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/social_provider.dart';
 
-/// Screen showing comments for a check-in, with the ability to add new ones.
+/// Screen showing comments for a target (check-in or recipe).
 class CommentsScreen extends ConsumerStatefulWidget {
-  const CommentsScreen({super.key, required this.checkInId});
+  const CommentsScreen({
+    super.key,
+    required this.targetType,
+    required this.targetId,
+  });
 
-  final String checkInId;
+  final String targetType;
+  final String targetId;
 
   @override
   ConsumerState<CommentsScreen> createState() => _CommentsScreenState();
@@ -34,8 +39,8 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
 
     setState(() => _sending = true);
     await ref.read(commentNotifierProvider.notifier).addComment(
-          targetType: 'check_in',
-          targetId: widget.checkInId,
+          targetType: widget.targetType,
+          targetId: widget.targetId,
           body: body,
         );
     _controller.clear();
@@ -44,7 +49,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final key = (targetType: 'check_in', targetId: widget.checkInId);
+    final key = (targetType: widget.targetType, targetId: widget.targetId);
     final commentsAsync = ref.watch(commentsProvider(key));
     final me = ref.watch(authProvider).user?.id;
 
@@ -168,8 +173,8 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
               Navigator.pop(ctx);
               ref.read(commentNotifierProvider.notifier).deleteComment(
                     commentId: c.comment.id,
-                    targetType: 'check_in',
-                    targetId: widget.checkInId,
+                    targetType: widget.targetType,
+                    targetId: widget.targetId,
                   );
             },
             child: Text('Delete',

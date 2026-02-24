@@ -179,6 +179,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/recipe/:id/fork',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => RecipeFormScreen(
+          forkedFromId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/recipe/:id/comments',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CommentsScreen(
+          targetType: 'recipe',
+          targetId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
         path: '/recipe/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => RecipeDetailScreen(
@@ -212,7 +227,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/check-in/:id/comments',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => CommentsScreen(
-          checkInId: state.pathParameters['id']!,
+          targetType: 'check_in',
+          targetId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
