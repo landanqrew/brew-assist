@@ -89,6 +89,7 @@ Users can build a gear profile and reference their equipment in check-ins and re
 
 - **Clean & minimal** — Generous whitespace, clear hierarchy, nothing unnecessary. The UI should feel calm and focused, not cluttered or gamified.
 - **Data is the hero** — Ratings, tasting notes, brew parameters, and stats are front and center. Photos support the experience but don't dominate it.
+- **Dynamic Depth & Elegance** — Cater to a specialty coffee demographic by using layered, soft UI elements. Avoid harsh lines; instead, rely on soft shadows, subtle borders, and gentle gradients to create a premium, tactile feel.
 - **Vivino-inspired** — Card-based layouts with strong rating displays, clean detail pages, and a good balance between social and utility. Functional first, social second.
 - **Consistent and predictable** — Standard platform patterns (bottom tabs, pull-to-refresh, familiar gestures). No clever tricks — just a well-made app.
 
@@ -97,12 +98,23 @@ Users can build a gear profile and reference their equipment in check-ins and re
 - **Color palette:**
   - **Base** — White (`#FFFFFF`) backgrounds, cool grays (`#F5F5F5` surface, `#9E9E9E` secondary text, `#2C2C2C` primary text)
   - **Accent** — Muted forest green (`#5B7F5E`) as the primary brand/action color. Used for buttons, active nav icons, selected tags, rating highlights, and gradient cards.
-  - **Accent gradient** — Soft gradient (forest green → sage) for feature cards (taste profile, points badges) — similar to the coral gradient blocks in the Vivino reference.
+  - **Accent gradient** — Soft gradient (forest green → sage) for primary call-to-action buttons and feature cards (taste profile, points badges) — similar to the coral gradient blocks in the Vivino reference.
   - **Star ratings** — Accent green for filled stars, light gray for empty.
   - **Error/destructive** — Muted red for warnings and destructive actions only.
-- **Typography** — Custom modern sans-serif (Inter, Plus Jakarta Sans, or similar) for a distinct but highly readable identity across both platforms.
+- **Typography Hierarchy & Character:**
+  - Custom modern sans-serif (Plus Jakarta Sans) for a distinct but highly readable identity.
+  - **Headlines:** Use tight letter spacing (e.g., `-0.5`) and bold weights (`w700`) for top-level headers.
+  - **Section Labels (Kickers):** Use small, all-caps text with wide letter spacing (e.g., `1.0`) in secondary colors inside cards to cleanly separate data types (e.g., "ROASTER", "COFFEE").
 - **Theme** — Light mode only for initial release. Design with enough token separation to add dark mode later without a rewrite.
-- **Corners & elevation** — Rounded corners on cards and buttons (12–16px radius). Subtle drop shadows for card elevation, no harsh borders.
+- **Floating Cards & Elevation:**
+  - **App Bars & Backgrounds:** Flat and borderless. `elevation: 0` and `scrolledUnderElevation: 0` for app bars to blend seamlessly with the white background.
+  - **Cards:** White surfaces floating above the background with a 16px radius, a very subtle border (`border.withValues(alpha: 0.4)`), and a soft, dispersed drop shadow (`shadow.withValues(alpha: 0.04)`, `blurRadius: 12`, `offset: (0, 4)`).
+- **Interactive Elements (Inputs, Buttons, Chips):**
+  - **Text Fields:** Filled surface (`#F5F5F5`), borderless by default, with a 16px radius. A subtle primary-colored border appears only on focus.
+  - **Chips & Tags:** Pill-shaped (24px radius). Unselected states are flat surface colors. Selected states use the primary brand color with a soft, glowing drop shadow (`primary.withValues(alpha: 0.25)`) to pop off the screen.
+  - **Primary Buttons:** Utilize the accent gradient, 16px radius, and a prominent glowing shadow (`primary.withValues(alpha: 0.3)`) to clearly indicate primary actions.
+- **Iconography Treatments:**
+  - Key icons within cards should be housed in soft, rounded-square containers (12px radius) using a transparent tint of the primary color (`primaryLight.withValues(alpha: 0.2)`) to provide a premium, modern touch.
 
 ### Layout & Content Density
 

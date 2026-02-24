@@ -183,6 +183,18 @@ abstract final class AppTextStyles {
     letterSpacing: 0.1,
   );
 
+  /// Kicker / category label inside cards.
+  ///
+  /// Small, all-caps, wide letter spacing. Use with `.toUpperCase()`.
+  /// e.g. "ROASTER", "COFFEE", "BREW METHOD"
+  static final TextStyle kicker = _base(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 1.0,
+    color: AppColors.textSecondary,
+  );
+
   // ── Material TextTheme ──────────────────────────────────────────────────
 
   /// Complete [TextTheme] wired to Plus Jakarta Sans for passing into

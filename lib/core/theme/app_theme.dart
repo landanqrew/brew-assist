@@ -24,7 +24,7 @@ abstract final class AppTheme {
       // ── AppBar ──────────────────────────────────────────────────────────
       appBarTheme: AppBarTheme(
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 0,
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
@@ -41,12 +41,15 @@ abstract final class AppTheme {
 
       // ── Card ────────────────────────────────────────────────────────────
       cardTheme: CardThemeData(
-        elevation: 2,
-        shadowColor: AppColors.shadow,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         color: AppColors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.4),
+          ),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -64,7 +67,7 @@ abstract final class AppTheme {
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           minimumSize: const Size(64, 48),
         ),
@@ -80,7 +83,7 @@ abstract final class AppTheme {
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           minimumSize: const Size(64, 48),
         ),
@@ -94,7 +97,7 @@ abstract final class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           minimumSize: const Size(64, 48),
         ),
@@ -107,7 +110,7 @@ abstract final class AppTheme {
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -133,30 +136,28 @@ abstract final class AppTheme {
           color: AppColors.error,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.5),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
       ),
 
@@ -216,7 +217,7 @@ abstract final class AppTheme {
         ),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         showCheckmark: false,

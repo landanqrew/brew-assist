@@ -271,36 +271,38 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Venue'),
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Add Venue', style: AppTextStyles.titleLarge),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Venue Name *',
-                hintText: 'e.g., Blue Bottle Coffee',
-              ),
+              decoration: _buildDialogInputDecoration('Venue Name *'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: addressController,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Address (optional)',
-                hintText: 'e.g., 123 Main St',
-              ),
+              decoration: _buildDialogInputDecoration('Address (optional)'),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: AppTextStyles.button.copyWith(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
             child: const Text('Add'),
           ),
         ],
@@ -391,22 +393,46 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         submissionState.status == CheckInSubmissionStatus.submitting;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Check-in')),
+      backgroundColor: AppColors.white,
+      appBar: AppBar(
+        title: Text('New Check-in', style: AppTextStyles.titleMedium),
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+      ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           children: [
-            // ── 1. Roaster ────────────────────────────────────────────────
-            _buildSectionHeader('Roaster'),
+            // ── Intro Text ────────────────────────────────────────────────
+            Text(
+              'What are you drinking?',
+              style: AppTextStyles.headlineMedium.copyWith(
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
             const SizedBox(height: 8),
+            Text(
+              'Log your latest brew and share your tasting notes.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // ── 1. Roaster ────────────────────────────────────────────────
+            _buildSectionHeader('The Roaster'),
+            const SizedBox(height: 12),
             if (!_roasterDone) ...[
               _buildRoasterSearch(),
             ] else ...[
               _buildSelectedRoasterCard(),
             ],
 
-            // ── 2. Coffee (only after roaster step done) ──────────────────
+            // ── 2. Coffee ─────────────────────────────────────────────────
             AnimatedSize(
               duration: kTransitionDuration,
               curve: kTransitionCurve,
@@ -415,8 +441,8 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader('Coffee'),
-                        const SizedBox(height: 8),
+                        _buildSectionHeader('The Coffee'),
+                        const SizedBox(height: 12),
                         if (!_coffeeDone)
                           _buildCoffeeSearch()
                         else
@@ -426,7 +452,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   : const SizedBox.shrink(),
             ),
 
-            // ── Remaining fields (only after coffee selected) ─────────────
+            // ── Remaining fields ──────────────────────────────────────────
             AnimatedSize(
               duration: kTransitionDuration,
               curve: kTransitionCurve,
@@ -436,85 +462,171 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-              // ── 3. Venue Type ───────────────────────────────────────────
-              _buildSectionHeader('Where are you?'),
-              const SizedBox(height: 8),
-              _buildVenueTypeChips(),
+                        // ── 3. Venue Type ─────────────────────────────────
+                        _buildSectionHeader('Where are you?'),
+                        const SizedBox(height: 12),
+                        _buildVenueTypeChips(),
 
-              // ── 4. Venue (cafe only) ────────────────────────────────────
-              if (_venueType == 'cafe') ...[
-                const SizedBox(height: 8),
-                _buildVenueSearch(),
-              ],
+                        // ── 4. Venue (cafe only) ──────────────────────────
+                        if (_venueType == 'cafe') ...[
+                          const SizedBox(height: 16),
+                          _buildVenueSearch(),
+                        ],
 
-              // ── 5. Preparation ──────────────────────────────────────────
-              _buildSectionHeader('Preparation'),
-              const SizedBox(height: 8),
-              _buildPreparationChips(),
+                        // ── 5. Preparation ────────────────────────────────
+                        _buildSectionHeader('Preparation'),
+                        const SizedBox(height: 12),
+                        _buildPreparationChips(),
 
-              // ── 6. Specialty Drink ──────────────────────────────────────
-              if (_preparation == 'Specialty Drink / Other') ...[
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _specialtyDrinkController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    hintText: 'What drink? e.g., Oat Milk Mocha',
-                  ),
-                ),
-              ],
+                        // ── 6. Specialty Drink ────────────────────────────
+                        if (_preparation == 'Specialty Drink / Other') ...[
+                          const SizedBox(height: 12),
+                          _buildSpecialtyDrinkField(),
+                        ],
 
-              // ── 7. Flavor Tags ──────────────────────────────────────────
-              _buildSectionHeader('Flavor Tags'),
-              const SizedBox(height: 8),
-              _buildFlavorTagChips(),
+                        // ── 7. Flavor Tags ────────────────────────────────
+                        _buildSectionHeader('Flavor Profile'),
+                        const SizedBox(height: 12),
+                        _buildFlavorTagChips(),
 
-              // ── 8. Rating ───────────────────────────────────────────────
-              _buildSectionHeader('Rating'),
-              const SizedBox(height: 8),
-              _buildRatingSection(),
+                        // ── 8. Rating ─────────────────────────────────────
+                        _buildSectionHeader('Your Rating'),
+                        const SizedBox(height: 12),
+                        _buildRatingSection(),
 
-              // ── 9. Notes ────────────────────────────────────────────────
-              _buildSectionHeader('Notes'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _notesController,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'Tell us about your experience',
-                  alignLabelWithHint: true,
-                ),
-              ),
+                        // ── 9. Notes ──────────────────────────────────────
+                        _buildSectionHeader('Notes'),
+                        const SizedBox(height: 12),
+                        _buildNotesField(),
 
-              // ── 10. Photo ───────────────────────────────────────────────
-              _buildSectionHeader('Photo'),
-              const SizedBox(height: 8),
-              PhotoPickerTile(
-                folder: 'check-ins',
-                imageUrl: _photoUrl,
-                onUploaded: (url) => setState(() => _photoUrl = url),
-              ),
+                        // ── 10. Photo ─────────────────────────────────────
+                        _buildSectionHeader('Photo'),
+                        const SizedBox(height: 12),
+                        PhotoPickerTile(
+                          folder: 'check-ins',
+                          imageUrl: _photoUrl,
+                          onUploaded: (url) => setState(() => _photoUrl = url),
+                        ),
 
-              // ── Submit ──────────────────────────────────────────────────
-              const SizedBox(height: 32),
-              _buildSubmitButton(isSubmitting),
+                        // ── Submit ────────────────────────────────────────
+                        const SizedBox(height: 48),
+                        _buildSubmitButton(isSubmitting),
+                        const SizedBox(height: 32),
                       ],
                     ),
             ),
-            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  // ── Section Header ────────────────────────────────────────────────────────
+  // ── UI Helpers ────────────────────────────────────────────────────────────
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Text(title, style: AppTextStyles.titleMedium),
+      padding: const EdgeInsets.only(top: 24, bottom: 4),
+      child: Text(
+        title,
+        style: AppTextStyles.titleMedium.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _buildSearchDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
+      filled: true,
+      fillColor: AppColors.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.5), width: 1),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  InputDecoration _buildDialogInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+      filled: true,
+      fillColor: AppColors.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  Widget _buildFloatingResults(Widget child) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildCustomChip({
+    required String label,
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+  }) {
+    return GestureDetector(
+      onTap: () => onSelected(!isSelected),
+      child: AnimatedContainer(
+        duration: kTransitionDuration,
+        curve: kTransitionCurve,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.chip.copyWith(
+            color: isSelected ? AppColors.white : AppColors.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 
@@ -527,24 +639,22 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         TextField(
           controller: _roasterSearchController,
           onChanged: _onRoasterSearchChanged,
-          decoration: const InputDecoration(
-            hintText: 'Search for a roaster...',
-            prefixIcon: Icon(Icons.search),
-          ),
+          decoration: _buildSearchDecoration('Search for a roaster...', Icons.search),
         ),
         if (_roasterSearchQuery.isNotEmpty) ...[
-          const SizedBox(height: 8),
           _buildRoasterSearchResults(),
         ],
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton(
+          child: TextButton.icon(
             onPressed: _skipRoaster,
-            child: Text(
+            icon: const Icon(Icons.help_outline, size: 16, color: AppColors.primary),
+            label: Text(
               "Skip / I don't know the roaster",
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -570,47 +680,52 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ),
       data: (results) {
         if (results.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'No roasters found for "$_roasterSearchQuery"',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          return _buildFloatingResults(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No roasters found for "$_roasterSearchQuery"',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           );
         }
 
-        return ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: results.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final roaster = results[index];
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 2,
-                ),
-                title: Text(roaster.name, style: AppTextStyles.titleSmall),
-                subtitle: roaster.location != null
-                    ? Text(
-                        roaster.location!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      )
-                    : null,
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textSecondary,
-                ),
-                onTap: () => _selectRoaster(roaster),
-              );
-            },
+        return _buildFloatingResults(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: results.length,
+              separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border.withValues(alpha: 0.3)),
+              itemBuilder: (context, index) {
+                final roaster = results[index];
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  title: Text(roaster.name, style: AppTextStyles.titleSmall),
+                  subtitle: roaster.location != null
+                      ? Text(
+                          roaster.location!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        )
+                      : null,
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  onTap: () => _selectRoaster(roaster),
+                );
+              },
+            ),
           ),
         );
       },
@@ -625,46 +740,59 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: AppColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primaryLight.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              gradient: AppColors.accentGradient,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.storefront,
-              color: AppColors.primary,
+              color: AppColors.white,
               size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              name,
-              style: _roasterSkipped
-                  ? AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontStyle: FontStyle.italic,
-                    )
-                  : AppTextStyles.titleSmall,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ROASTER',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                Text(
+                  name,
+                  style: _roasterSkipped
+                      ? AppTextStyles.titleMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        )
+                      : AppTextStyles.titleMedium,
+                ),
+              ],
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: _changeRoaster,
-            child: const Text('Change'),
+            icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+            tooltip: 'Change Roaster',
           ),
         ],
       ),
@@ -680,27 +808,23 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         TextField(
           controller: _coffeeSearchController,
           onChanged: _onCoffeeSearchChanged,
-          decoration: const InputDecoration(
-            hintText: 'Search for a coffee...',
-            prefixIcon: Icon(Icons.search),
-          ),
+          decoration: _buildSearchDecoration('Search for a coffee...', Icons.search),
         ),
-        const SizedBox(height: 8),
-        // If roaster selected: show their coffees, else show search results.
         if (_selectedRoaster != null && _coffeeSearchQuery.isEmpty)
           _buildRoasterCoffeeList()
         else if (_coffeeSearchQuery.isNotEmpty)
           _buildCoffeeSearchResults(),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: _openAddCoffeeSheet,
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primary),
             label: Text(
               'Coffee not listed? Add it',
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -710,8 +834,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   }
 
   Widget _buildRoasterCoffeeList() {
-    final coffeesAsync =
-        ref.watch(coffeesByRoasterProvider(_selectedRoaster!.id));
+    final coffeesAsync = ref.watch(coffeesByRoasterProvider(_selectedRoaster!.id));
 
     return coffeesAsync.when(
       loading: () => const Padding(
@@ -727,25 +850,24 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ),
       data: (results) {
         if (results.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'No coffees found for this roaster',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          return _buildFloatingResults(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No coffees found for this roaster',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           );
         }
-
         return _buildCoffeeResultsList(results);
       },
     );
   }
 
   Widget _buildCoffeeSearchResults() {
-    // If roaster selected, filter by roaster's coffees via the search query;
-    // otherwise search all coffees.
     final searchAsync = ref.watch(coffeeSearchProvider(_coffeeSearchQuery));
 
     return searchAsync.when(
@@ -762,53 +884,57 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ),
       data: (results) {
         if (results.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'No coffees found for "$_coffeeSearchQuery"',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          return _buildFloatingResults(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No coffees found for "$_coffeeSearchQuery"',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           );
         }
-
         return _buildCoffeeResultsList(results);
       },
     );
   }
 
   Widget _buildCoffeeResultsList(List<CoffeeWithRoaster> results) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 240),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: results.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final item = results[index];
-          return ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 2,
-            ),
-            title: Text(item.coffee.name, style: AppTextStyles.titleSmall),
-            subtitle: item.roaster != null
-                ? Text(
-                    item.roaster!.name,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  )
-                : null,
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-            ),
-            onTap: () => _selectCoffee(item),
-          );
-        },
+    return _buildFloatingResults(
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 240),
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: results.length,
+          separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border.withValues(alpha: 0.3)),
+          itemBuilder: (context, index) {
+            final item = results[index];
+            return ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
+              title: Text(item.coffee.name, style: AppTextStyles.titleSmall),
+              subtitle: item.roaster != null
+                  ? Text(
+                      item.roaster!.name,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    )
+                  : null,
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+              onTap: () => _selectCoffee(item),
+            );
+          },
+        ),
       ),
     );
   }
@@ -820,52 +946,58 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: AppColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primaryLight.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              gradient: AppColors.accentGradient,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.coffee,
-              color: AppColors.primary,
+              color: AppColors.white,
               size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_selectedCoffeeName ?? '', style: AppTextStyles.titleSmall),
-                if (_selectedRoasterName != null) ...[
-                  const SizedBox(height: 2),
+                Text(
+                  'COFFEE',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                Text(_selectedCoffeeName ?? '', style: AppTextStyles.titleMedium),
+                if (_selectedRoasterName != null)
                   Text(
                     _selectedRoasterName!,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
-                ],
               ],
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: _changeCoffee,
-            child: const Text('Change'),
+            icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+            tooltip: 'Change Coffee',
           ),
         ],
       ),
@@ -879,12 +1011,13 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     const labels = {'home': 'Home', 'cafe': 'Cafe', 'other': 'Other'};
 
     return Wrap(
-      spacing: 8,
+      spacing: 12,
+      runSpacing: 12,
       children: types.map((type) {
         final isSelected = _venueType == type;
-        return ChoiceChip(
-          label: Text(labels[type]!),
-          selected: isSelected,
+        return _buildCustomChip(
+          label: labels[type]!,
+          isSelected: isSelected,
           onSelected: (selected) {
             setState(() {
               _venueType = selected ? type : null;
@@ -907,33 +1040,58 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       return AnimatedContainer(
         duration: kTransitionDuration,
         curve: kTransitionCurve,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: AppColors.shadow.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
-            const Icon(Icons.location_on, color: AppColors.primary, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(_selectedVenue!.name, style: AppTextStyles.titleSmall),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.location_on,
+                color: AppColors.primary,
+                size: 24,
+              ),
             ),
-            TextButton(
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'VENUE',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  Text(_selectedVenue!.name, style: AppTextStyles.titleMedium),
+                ],
+              ),
+            ),
+            IconButton(
               onPressed: () => setState(() {
                 _selectedVenue = null;
                 _venueSearchController.clear();
                 _venueSearchQuery = '';
               }),
-              child: const Text('Change'),
+              icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+              tooltip: 'Change Venue',
             ),
           ],
         ),
@@ -946,25 +1104,22 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         TextField(
           controller: _venueSearchController,
           onChanged: _onVenueSearchChanged,
-          decoration: const InputDecoration(
-            hintText: 'Search for a cafe...',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
+          decoration: _buildSearchDecoration('Search for a cafe...', Icons.location_on_outlined),
         ),
         if (_venueSearchQuery.isNotEmpty) ...[
-          const SizedBox(height: 8),
           _buildVenueSearchResults(),
         ],
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: _addNewVenue,
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primary),
             label: Text(
               'Add new venue',
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -990,44 +1145,48 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ),
       data: (results) {
         if (results.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'No venues found for "$_venueSearchQuery"',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          return _buildFloatingResults(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No venues found for "$_venueSearchQuery"',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           );
         }
 
-        return ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 160),
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: results.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final venue = results[index];
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 2,
-                ),
-                leading: const Icon(Icons.location_on, size: 20),
-                title: Text(venue.name, style: AppTextStyles.titleSmall),
-                subtitle: venue.address != null
-                    ? Text(
-                        venue.address!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      )
-                    : null,
-                onTap: () => _selectVenue(venue),
-              );
-            },
+        return _buildFloatingResults(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 160),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: results.length,
+              separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border.withValues(alpha: 0.3)),
+              itemBuilder: (context, index) {
+                final venue = results[index];
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  leading: const Icon(Icons.location_on, size: 20, color: AppColors.primary),
+                  title: Text(venue.name, style: AppTextStyles.titleSmall),
+                  subtitle: venue.address != null
+                      ? Text(
+                          venue.address!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        )
+                      : null,
+                  onTap: () => _selectVenue(venue),
+                );
+              },
+            ),
           ),
         );
       },
@@ -1038,13 +1197,13 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
   Widget _buildPreparationChips() {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       children: _preparations.map((prep) {
         final isSelected = _preparation == prep;
-        return ChoiceChip(
-          label: Text(prep),
-          selected: isSelected,
+        return _buildCustomChip(
+          label: prep,
+          isSelected: isSelected,
           onSelected: (selected) {
             setState(() {
               _preparation = selected ? prep : null;
@@ -1058,17 +1217,35 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     );
   }
 
+  Widget _buildSpecialtyDrinkField() {
+    return TextField(
+      controller: _specialtyDrinkController,
+      textCapitalization: TextCapitalization.words,
+      decoration: InputDecoration(
+        hintText: 'What drink? e.g., Oat Milk Mocha',
+        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
   // ── Flavor Tag Chips ──────────────────────────────────────────────────────
 
   Widget _buildFlavorTagChips() {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       children: _flavorTagOptions.map((tag) {
         final isSelected = _flavorTags.contains(tag);
-        return FilterChip(
-          label: Text(tag),
-          selected: isSelected,
+        return _buildCustomChip(
+          label: tag,
+          isSelected: isSelected,
           onSelected: (selected) {
             setState(() {
               if (selected) {
@@ -1086,50 +1263,104 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   // ── Rating Section ────────────────────────────────────────────────────────
 
   Widget _buildRatingSection() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        RatingBar.builder(
-          initialRating: _rating,
-          minRating: 0.5,
-          direction: Axis.horizontal,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemSize: 40,
-          unratedColor: AppColors.ratingEmpty,
-          itemBuilder: (context, _) => const Icon(
-            Icons.star_rounded,
-            color: AppColors.ratingFilled,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          RatingBar.builder(
+            initialRating: _rating,
+            minRating: 0.5,
+            direction: Axis.horizontal,
+            allowHalfRating: true,
+            itemCount: 5,
+            itemSize: 36,
+            unratedColor: AppColors.ratingEmpty,
+            itemBuilder: (context, _) => const Icon(
+              Icons.star_rounded,
+              color: AppColors.ratingFilled,
+            ),
+            onRatingUpdate: (value) => setState(() => _rating = value),
           ),
-          onRatingUpdate: (value) => setState(() => _rating = value),
+          Text(
+            _rating > 0 ? _rating.toStringAsFixed(1) : '-',
+            style: AppTextStyles.ratingLarge.copyWith(color: AppColors.primary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Notes Field ───────────────────────────────────────────────────────────
+
+  Widget _buildNotesField() {
+    return TextField(
+      controller: _notesController,
+      maxLines: 4,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText: 'Share your tasting notes or experience...',
+        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
-        const SizedBox(width: 16),
-        Text(
-          _rating > 0 ? _rating.toStringAsFixed(1) : '-',
-          style: AppTextStyles.ratingLarge,
-        ),
-      ],
+        contentPadding: const EdgeInsets.all(16),
+      ),
     );
   }
 
   // ── Submit Button ─────────────────────────────────────────────────────────
 
   Widget _buildSubmitButton(bool isSubmitting) {
-    return SizedBox(
+    return AnimatedContainer(
+      duration: kTransitionDuration,
+      height: 56,
       width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _canSubmit && !isSubmitting ? _submit : null,
-        child: isSubmitting
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.white,
-                ),
-              )
-            : const Text('Check In'),
+      decoration: BoxDecoration(
+        gradient: _canSubmit ? AppColors.accentGradient : null,
+        color: _canSubmit ? null : AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: _canSubmit
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                )
+              ]
+            : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _canSubmit && !isSubmitting ? _submit : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: isSubmitting
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.white,
+                    ),
+                  )
+                : Text(
+                    'Complete Check-in',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: _canSubmit ? AppColors.white : AppColors.textHint,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+          ),
+        ),
       ),
     );
   }

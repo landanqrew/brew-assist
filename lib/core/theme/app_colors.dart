@@ -92,4 +92,34 @@ abstract final class AppColors {
 
   /// Shadow color for elevation.
   static const Color shadow = Color(0x33000000);
+
+  // ── Reusable Decorations ─────────────────────────────────────────────
+
+  /// Standard card box decoration matching the design spec.
+  ///
+  /// White surface, 16px radius, subtle border, soft dispersed drop shadow.
+  /// Use this for any hand-built card (e.g. selected-state cards in forms)
+  /// instead of ad-hoc BoxDecoration.
+  static BoxDecoration get cardDecoration => BoxDecoration(
+        color: white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
+
+  /// Glowing shadow used under primary action buttons when using the
+  /// accent gradient. Apply via `Container` wrapping a gradient button.
+  static List<BoxShadow> get primaryGlow => [
+        BoxShadow(
+          color: primary.withValues(alpha: 0.3),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ];
 }
