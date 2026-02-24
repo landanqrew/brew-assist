@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -181,11 +182,14 @@ class _RecipeDetailBody extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // ── Rating + Save Count ─────────────────────────────────
-          if (recipe.avgRating != null || recipe.saveCount != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _RatingSection(recipe: recipe),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _RatingSection(
+              recipe: recipe,
+              recipeId: recipeId,
+              isOwner: isOwner,
             ),
+          ),
 
           const SizedBox(height: 24),
 
@@ -384,52 +388,101 @@ class _RecipeDetailBody extends ConsumerWidget {
 
 // ── Rating Section ──────────────────────────────────────────────────────────
 
-class _RatingSection extends StatelessWidget {
-  const _RatingSection({required this.recipe});
+class _RatingSection extends ConsumerWidget {
+  const _RatingSection({
+    required this.recipe,
+    required this.recipeId,
+    required this.isOwner,
+  });
 
   final Recipe recipe;
+  final String recipeId;
+  final bool isOwner;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myRating = ref.watch(myRecipeRatingProvider(recipeId)).valueOrNull;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          if (recipe.avgRating != null) ...[
-            Text(
-              recipe.avgRating!.toStringAsFixed(1),
-              style: AppTextStyles.ratingLarge,
-            ),
-            Text(
-              '/5',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            _StarRow(rating: recipe.avgRating!),
-          ] else
-            Text(
-              'No ratings yet',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          if (recipe.saveCount != null && recipe.saveCount! > 0) ...[
-            const SizedBox(width: 16),
-            Icon(Icons.bookmark_rounded,
-                size: 18, color: AppColors.textSecondary),
-            const SizedBox(width: 4),
-            Text(
-              '${recipe.saveCount}',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
+          // Aggregate rating display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (recipe.avgRating != null) ...[
+                Text(
+                  recipe.avgRating!.toStringAsFixed(1),
+                  style: AppTextStyles.ratingLarge,
+                ),
+                Text(
+                  '/5',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _StarRow(rating: recipe.avgRating!),
+              ] else
+                Text(
+                  'No ratings yet',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              if (recipe.saveCount != null && recipe.saveCount! > 0) ...[
+                const SizedBox(width: 16),
+                Icon(Icons.bookmark_rounded,
+                    size: 18, color: AppColors.textSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  '${recipe.saveCount}',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          // Interactive "Your Rating" row (hidden for recipe owner)
+          if (!isOwner) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Your Rating',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                RatingBar.builder(
+                  initialRating: myRating ?? 0,
+                  minRating: 0.5,
+                  direction: Axis.horizontal,
+                  allowHalfRating: true,
+                  itemCount: 5,
+                  itemSize: 28,
+                  unratedColor: AppColors.ratingEmpty,
+                  itemBuilder: (context, _) => const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.ratingFilled,
+                  ),
+                  onRatingUpdate: (value) {
+                    ref
+                        .read(recipeRatingNotifierProvider.notifier)
+                        .rateRecipe(recipeId, value);
+                  },
+                ),
+              ],
             ),
           ],
         ],

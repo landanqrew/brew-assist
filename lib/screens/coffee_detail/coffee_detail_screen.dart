@@ -6,6 +6,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/coffee_provider.dart';
+import '../../providers/recipe_provider.dart';
+import '../../widgets/recipe_card.dart';
 
 /// Full detail screen for a single coffee.
 ///
@@ -75,6 +77,7 @@ class _CoffeeDetailBody extends ConsumerWidget {
     final coffee = coffeeWithRoaster.coffee;
     final roaster = coffeeWithRoaster.roaster;
     final checkInsAsync = ref.watch(coffeeCheckInsProvider(coffeeId));
+    final recipesAsync = ref.watch(recipesByCoffeeProvider(coffeeId));
 
     return Scaffold(
       appBar: AppBar(
@@ -207,6 +210,70 @@ class _CoffeeDetailBody extends ConsumerWidget {
                 children: checkIns.map((checkIn) {
                   return _CheckInTile(checkIn: checkIn);
                 }).toList(),
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(indent: 16, endIndent: 16),
+          const SizedBox(height: 16),
+
+          // ── Recipes ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Recipes', style: AppTextStyles.titleSmall),
+          ),
+          const SizedBox(height: 12),
+          recipesAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Could not load recipes',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            data: (recipes) {
+              if (recipes.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.receipt_long_outlined,
+                          size: 40,
+                          color: AppColors.textHint,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No recipes for this coffee yet',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: recipes
+                      .map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: RecipeCard(item: item),
+                          ))
+                      .toList(),
+                ),
               );
             },
           ),

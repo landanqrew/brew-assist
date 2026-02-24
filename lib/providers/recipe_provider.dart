@@ -304,3 +304,71 @@ final recipeProvider =
     StateNotifierProvider<RecipeNotifier, RecipeSubmissionState>((ref) {
   return RecipeNotifier(ref);
 });
+
+// ── Rating Providers ──────────────────────────────────────────────────────
+
+/// Fetches the current user's rating for a given recipe, or null if unrated.
+final myRecipeRatingProvider =
+    FutureProvider.family<double?, String>((ref, recipeId) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return null;
+
+  final data = await supabase
+      .from('recipe_ratings')
+      .select('rating')
+      .eq('user_id', me)
+      .eq('recipe_id', recipeId)
+      .maybeSingle();
+
+  if (data == null) return null;
+  return (data['rating'] as num).toDouble();
+});
+
+/// Upserts a recipe rating and refreshes the avg.
+class RecipeRatingNotifier extends StateNotifier<AsyncValue<void>> {
+  RecipeRatingNotifier(this._ref) : super(const AsyncData(null));
+
+  final Ref _ref;
+
+  Future<void> rateRecipe(String recipeId, double rating) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return;
+
+    state = const AsyncLoading();
+    try {
+      await supabase.from('recipe_ratings').upsert(
+        {
+          'user_id': me,
+          'recipe_id': recipeId,
+          'rating': rating,
+        },
+        onConflict: 'user_id,recipe_id',
+      );
+      await supabase.rpc('update_recipe_avg_rating', params: {'rid': recipeId});
+      _ref.invalidate(myRecipeRatingProvider(recipeId));
+      _ref.invalidate(recipeDetailProvider(recipeId));
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}
+
+final recipeRatingNotifierProvider =
+    StateNotifierProvider<RecipeRatingNotifier, AsyncValue<void>>((ref) {
+  return RecipeRatingNotifier(ref);
+});
+
+// ── Recipes by Coffee ────────────────────────────────────────────────────
+
+/// Fetches recipes that use a specific coffee.
+final recipesByCoffeeProvider =
+    FutureProvider.family<List<RecipeFeedItem>, String>((ref, coffeeId) async {
+  final data = await supabase
+      .from('recipes')
+      .select('*, profiles(*)')
+      .eq('coffee_id', coffeeId)
+      .order('created_at', ascending: false)
+      .limit(10);
+  return (data as List).map((j) => RecipeFeedItem.fromJson(j)).toList();
+});
