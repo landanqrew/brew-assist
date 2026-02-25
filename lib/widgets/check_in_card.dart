@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,6 +70,12 @@ class CheckInCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
+            ],
+
+            // ── Photo ──────────────────────────────────────────────────
+            if (item.photoUrl != null && item.photoUrl!.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _PhotoSection(photoUrl: item.photoUrl!),
             ],
 
             // ── Bottom row: like + comment ───────────────────────────
@@ -299,6 +306,96 @@ class _SmallChip extends StatelessWidget {
         style: AppTextStyles.bodySmall.copyWith(
           color: AppColors.textSecondary,
         ),
+      ),
+    );
+  }
+}
+
+// ── Photo Section ────────────────────────────────────────────────────────────
+
+class _PhotoSection extends StatelessWidget {
+  const _PhotoSection({required this.photoUrl});
+
+  final String photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showDialog(
+        context: context,
+        builder: (_) => _PhotoViewer(photoUrl: photoUrl),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: CachedNetworkImage(
+            imageUrl: photoUrl,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              height: 200,
+              color: AppColors.surface,
+            ),
+            errorWidget: (_, __, ___) => Container(
+              height: 200,
+              color: AppColors.surface,
+              child: const Center(
+                child: Icon(
+                  Icons.broken_image_rounded,
+                  color: AppColors.textSecondary,
+                  size: 32,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Photo Viewer ─────────────────────────────────────────────────────────────
+
+class _PhotoViewer extends StatelessWidget {
+  const _PhotoViewer({required this.photoUrl});
+
+  final String photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          InteractiveViewer(
+            child: Center(
+              child: CachedNetworkImage(
+                imageUrl: photoUrl,
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+                errorWidget: (_, __, ___) => const Center(
+                  child: Icon(
+                    Icons.broken_image_rounded,
+                    color: Colors.white54,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 8,
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+            ),
+          ),
+        ],
       ),
     );
   }
