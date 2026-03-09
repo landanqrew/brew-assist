@@ -5,9 +5,11 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/coffee.dart';
 import '../../providers/coffee_provider.dart';
 import '../../providers/recipe_provider.dart';
 import '../../widgets/recipe_card.dart';
+import '../../widgets/star_row.dart';
 
 /// Full detail screen for a single coffee.
 ///
@@ -359,7 +361,7 @@ class _LargeRatingDisplay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          _StarRow(rating: rating!, size: 20),
+          StarRow(rating: rating!, size: 20),
           if (checkInCount != null && checkInCount! > 0) ...[
             const SizedBox(width: 12),
             Text(
@@ -375,62 +377,18 @@ class _LargeRatingDisplay extends StatelessWidget {
   }
 }
 
-// ── Star Row ────────────────────────────────────────────────────────────────
-
-class _StarRow extends StatelessWidget {
-  const _StarRow({required this.rating, this.size = 16});
-
-  final double rating;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-        IconData icon;
-        Color color;
-
-        if (rating >= starValue) {
-          icon = Icons.star;
-          color = AppColors.ratingFilled;
-        } else if (rating >= starValue - 0.5) {
-          icon = Icons.star_half;
-          color = AppColors.ratingFilled;
-        } else {
-          icon = Icons.star_border;
-          color = AppColors.ratingEmpty;
-        }
-
-        return Icon(icon, size: size, color: color);
-      }),
-    );
-  }
-}
-
 // ── Info Section ────────────────────────────────────────────────────────────
 
 class _InfoSection extends StatelessWidget {
   const _InfoSection({required this.coffee});
 
-  final dynamic coffee;
+  final Coffee coffee;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: AppColors.cardDecoration,
       child: Column(
         children: [
           if (coffee.origin != null && coffee.origin!.isNotEmpty)

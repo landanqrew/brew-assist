@@ -8,6 +8,7 @@ import '../core/theme/app_text_styles.dart';
 import '../models/recipe.dart';
 import '../providers/recipe_provider.dart';
 import '../providers/social_provider.dart';
+import 'small_chip.dart';
 
 /// A card widget for displaying a recipe in the browse list.
 class RecipeCard extends StatelessWidget {
@@ -23,12 +24,6 @@ class RecipeCard extends StatelessWidget {
       onTap: () => context.push('/recipe/${recipe.id}'),
       child: Card(
         margin: EdgeInsets.zero,
-        elevation: 1,
-        shadowColor: AppColors.shadow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: AppColors.white,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -48,7 +43,7 @@ class RecipeCard extends StatelessWidget {
               const SizedBox(height: 8),
 
               // Brew method chip
-              _SmallChip(label: recipe.brewMethod),
+              SmallChip(label: recipe.brewMethod),
 
               // Key params
               if (_hasParams(recipe)) ...[
@@ -185,32 +180,7 @@ class _ParamsRow extends StatelessWidget {
     return Wrap(
       spacing: 6,
       runSpacing: 4,
-      children: pills.map((p) => _SmallChip(label: p)).toList(),
-    );
-  }
-}
-
-// ── Small Chip ──────────────────────────────────────────────────────────────
-
-class _SmallChip extends StatelessWidget {
-  const _SmallChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.bodySmall.copyWith(
-          color: AppColors.textSecondary,
-        ),
-      ),
+      children: pills.map((p) => SmallChip(label: p)).toList(),
     );
   }
 }
@@ -240,63 +210,75 @@ class _BottomRow extends ConsumerWidget {
     return Row(
       children: [
         // Like button
-        GestureDetector(
+        InkWell(
           onTap: () => ref
               .read(likeNotifierProvider.notifier)
               .toggleLike('recipe', recipeId),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isLiked
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                size: 20,
-                color: isLiked ? AppColors.error : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$likeCount',
-                style: AppTextStyles.bodySmall.copyWith(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isLiked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 20,
                   color: isLiked ? AppColors.error : AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$likeCount',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: isLiked ? AppColors.error : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
 
         // Comment button
-        GestureDetector(
+        InkWell(
           onTap: () => context.push('/recipe/$recipeId/comments'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$commentCount',
-                style: AppTextStyles.bodySmall.copyWith(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 18,
                   color: AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$commentCount',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const Spacer(),
 
         // Save/bookmark button
-        GestureDetector(
+        InkWell(
           onTap: () =>
               ref.read(saveNotifierProvider.notifier).toggleSave(recipeId),
-          child: Icon(
-            isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-            size: 22,
-            color: isSaved ? AppColors.primary : AppColors.textSecondary,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              size: 22,
+              color: isSaved ? AppColors.primary : AppColors.textSecondary,
+            ),
           ),
         ),
       ],

@@ -87,33 +87,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search...',
-                prefixIcon:
-                    const Icon(Icons.search, color: AppColors.textSecondary),
+                hintStyle: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textHint),
+                prefixIcon: const Icon(Icons.search,
+                    color: AppColors.textSecondary, size: 20),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear,
-                            color: AppColors.textSecondary),
+                            color: AppColors.textSecondary, size: 20),
                         onPressed: _clearSearch,
                       )
                     : null,
                 filled: true,
                 fillColor: AppColors.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      const BorderSide(color: AppColors.primary, width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                      color: AppColors.primaryDark, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),

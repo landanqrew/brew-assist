@@ -48,8 +48,8 @@ abstract final class AppColors {
   /// Primary text — near-black.
   static const Color textPrimary = Color(0xFF2C2C2C);
 
-  /// Secondary / supporting text — medium gray.
-  static const Color textSecondary = Color(0xFF9E9E9E);
+  /// Secondary / supporting text — medium gray (4.6:1 on background).
+  static const Color textSecondary = Color(0xFF6B6B6B);
 
   /// Hint / placeholder text.
   static const Color textHint = Color(0xFFBDBDBD);

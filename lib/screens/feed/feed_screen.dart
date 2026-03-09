@@ -7,6 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../providers/feed_provider.dart';
 import '../../providers/social_provider.dart';
 import '../../widgets/check_in_card.dart';
+import '../../widgets/toggle_pill.dart';
 
 /// The main feed tab — displays a scrollable list of recent check-ins from
 /// all users (for MVP, no follow filtering).
@@ -79,54 +80,20 @@ class _FeedModeToggle extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
-          _TogglePill(
+          TogglePill(
             label: 'Following',
             selected: mode == FeedMode.following,
             onTap: () =>
                 ref.read(feedModeProvider.notifier).state = FeedMode.following,
           ),
           const SizedBox(width: 8),
-          _TogglePill(
+          TogglePill(
             label: 'Everyone',
             selected: mode == FeedMode.everyone,
             onTap: () =>
                 ref.read(feedModeProvider.notifier).state = FeedMode.everyone,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _TogglePill extends StatelessWidget {
-  const _TogglePill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: selected ? AppColors.white : AppColors.textSecondary,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }

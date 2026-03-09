@@ -63,16 +63,39 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search recipes...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textHint),
+                prefixIcon: const Icon(Icons.search,
+                    color: AppColors.textSecondary, size: 20),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear,
+                            color: AppColors.textSecondary, size: 20),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
                       )
                     : null,
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                      color: AppColors.primaryDark, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
             ),
           ),

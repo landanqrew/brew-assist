@@ -555,7 +555,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.5), width: 1),
+        borderSide: const BorderSide(color: AppColors.primaryDark, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );

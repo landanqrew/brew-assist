@@ -9,6 +9,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 import '../providers/feed_provider.dart';
 import '../providers/social_provider.dart';
+import 'small_chip.dart';
 
 /// A Vivino-inspired card widget for displaying a check-in in the feed.
 ///
@@ -23,12 +24,6 @@ class CheckInCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      elevation: 1,
-      shadowColor: AppColors.shadow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      color: AppColors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -246,11 +241,11 @@ class _MethodChips extends StatelessWidget {
       runSpacing: 4,
       children: [
         if (item.brewMethod != null)
-          _SmallChip(label: item.brewMethod!),
+          SmallChip(label: item.brewMethod!),
         if (item.specialtyDrink != null && item.specialtyDrink!.isNotEmpty)
-          _SmallChip(label: item.specialtyDrink!),
+          SmallChip(label: item.specialtyDrink!),
         if (item.venueType != null)
-          _SmallChip(label: _venueTypeLabel(item.venueType!)),
+          SmallChip(label: _venueTypeLabel(item.venueType!)),
       ],
     );
   }
@@ -281,32 +276,7 @@ class _FlavorTags extends StatelessWidget {
     return Wrap(
       spacing: 6,
       runSpacing: 4,
-      children: tags.map((tag) => _SmallChip(label: tag)).toList(),
-    );
-  }
-}
-
-// ── Small Chip ───────────────────────────────────────────────────────────────
-
-class _SmallChip extends StatelessWidget {
-  const _SmallChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.bodySmall.copyWith(
-          color: AppColors.textSecondary,
-        ),
-      ),
+      children: tags.map((tag) => SmallChip(label: tag)).toList(),
     );
   }
 }
@@ -421,51 +391,59 @@ class _BottomRow extends ConsumerWidget {
     return Row(
       children: [
         // Like button
-        GestureDetector(
+        InkWell(
           onTap: () => ref
               .read(likeNotifierProvider.notifier)
               .toggleLike('check_in', checkInId),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isLiked
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                size: 20,
-                color: isLiked ? AppColors.error : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$likeCount',
-                style: AppTextStyles.bodySmall.copyWith(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isLiked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 20,
                   color: isLiked ? AppColors.error : AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$likeCount',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: isLiked ? AppColors.error : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
 
         // Comment button
-        GestureDetector(
+        InkWell(
           onTap: () => context.push('/check-in/$checkInId/comments'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$commentCount',
-                style: AppTextStyles.bodySmall.copyWith(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 18,
                   color: AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$commentCount',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

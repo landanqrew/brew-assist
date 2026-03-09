@@ -12,6 +12,8 @@ import '../../providers/equipment_provider.dart';
 import '../../providers/recipe_provider.dart';
 import '../../providers/social_provider.dart';
 import '../../widgets/gradient_button.dart';
+import '../../widgets/small_chip.dart';
+import '../../widgets/star_row.dart';
 
 /// Full detail screen for a single recipe.
 class RecipeDetailScreen extends ConsumerWidget {
@@ -153,20 +155,7 @@ class _RecipeDetailBody extends ConsumerWidget {
                 // Brew method chip + time
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        recipe.brewMethod,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
+                    SmallChip(label: recipe.brewMethod),
                     const SizedBox(width: 12),
                     Text(
                       timeago.format(recipe.createdAt),
@@ -442,7 +431,7 @@ class _RatingSection extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                _StarRow(rating: recipe.avgRating!),
+                StarRow(rating: recipe.avgRating!),
               ] else
                 Text(
                   'No ratings yet',
@@ -502,39 +491,6 @@ class _RatingSection extends ConsumerWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-// ── Star Row ────────────────────────────────────────────────────────────────
-
-class _StarRow extends StatelessWidget {
-  const _StarRow({required this.rating});
-
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-        IconData icon;
-        Color color;
-
-        if (rating >= starValue) {
-          icon = Icons.star;
-          color = AppColors.ratingFilled;
-        } else if (rating >= starValue - 0.5) {
-          icon = Icons.star_half;
-          color = AppColors.ratingFilled;
-        } else {
-          icon = Icons.star_border;
-          color = AppColors.ratingEmpty;
-        }
-
-        return Icon(icon, size: 20, color: color);
-      }),
     );
   }
 }
@@ -807,52 +763,60 @@ class _SocialRow extends ConsumerWidget {
     return Row(
       children: [
         // Like
-        GestureDetector(
+        InkWell(
           onTap: () => ref
               .read(likeNotifierProvider.notifier)
               .toggleLike('recipe', recipeId),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isLiked
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                size: 22,
-                color: isLiked ? AppColors.error : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '$likeCount',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color:
-                      isLiked ? AppColors.error : AppColors.textSecondary,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isLiked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 22,
+                  color: isLiked ? AppColors.error : AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  '$likeCount',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color:
+                        isLiked ? AppColors.error : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: 20),
 
         // Comment
-        GestureDetector(
+        InkWell(
           onTap: () => context.push('/recipe/$recipeId/comments'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 20,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '$commentCount',
-                style: AppTextStyles.bodyMedium.copyWith(
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 20,
                   color: AppColors.textSecondary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  '$commentCount',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
